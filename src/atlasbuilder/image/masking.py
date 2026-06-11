@@ -15,6 +15,30 @@ from atlasbuilder.image._image_config_utils import (
 from atlasbuilder.io.nifti import write_nifti_from_array
 
 
+def segmentation_to_binary_mask(
+    segmentation_config: ImageConfig,
+    output_path: Path,
+) -> ImageConfig:
+    segmentation_nifti = nib.load(str(segmentation_config.image))
+    segmentation_data = np.asanyarray(segmentation_nifti.dataobj)
+    segmentation_space = validate_or_fill_space_shape(
+        segmentation_config,
+        tuple(int(v) for v in segmentation_data.shape),
+    )
+
+    output_data = (segmentation_data > 0).astype(np.uint8, copy=False)
+    output_space = segmentation_space.model_copy(
+        update={"shape": tuple(int(v) for v in output_data.shape)}
+    )
+    write_nifti_from_array(
+        output_data,
+        output_space,
+        output_path,
+        dtype=np.uint8,
+    )
+    return build_output_image_config(segmentation_config, output_path, output_space)
+
+
 def apply_binary_mask(
     image_config: ImageConfig,
     mask_config: ImageConfig,
