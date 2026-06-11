@@ -1,0 +1,57 @@
+# Historical Kim lab SyN baseline used as a benchmark during registration
+# troubleshooting. This is the closest package-facing version of the long-used
+# lab default configuration.
+
+name: baseline_syn_kimlab
+description: Historical Kim lab SyN baseline benchmark at 20 um.
+
+preprocessing:
+  # Optional global intensity normalization before registration.
+  # Allowed values: null, zscore, robust_zscore
+  intensity_normalization: null
+
+  # Optional clipping and rescaling of intensity tails.
+  # Example: [1.0, 99.0]
+  minmax_clip_percentiles: null
+
+  # Histogram-match the moving image to the fixed image before registration.
+  histogram_match: false
+
+  # Optional Gaussian smoothing in voxel units before registration.
+  gaussian_sigma_vox: null
+
+registration:
+  # Registration working resolution in microns.
+  working_resolution_um: 20
+
+  # Allowed values: Rigid, Affine, SyN, SyNOnly
+  transform_type: SyN
+
+  # Affine-stage settings
+  aff_metric: mattes
+  aff_sampling: 32
+  aff_random_sampling_rate: 0.25
+  aff_iterations: [1000, 1000, 1000]
+  aff_shrink_factors: [12, 8, 4]
+  aff_smoothing_sigmas: [4, 3, 2]
+
+  # Deformable-stage settings
+  # Allowed values for syn_metric: mattes, CC
+  syn_metric: mattes
+  syn_sampling: 32
+  syn_gradient_step: 0.1
+  syn_flow_sigma: 3.0
+  syn_total_sigma: 0.0
+  syn_reg_iterations: [1000, 1000, 1000]
+
+execution:
+  # Number of threads to use. Set to 0 for library default behavior.
+  threads: 32
+  singleprecision: true
+  use_legacy_histogram_matching: false
+  verbose: true
+  random_seed: 0
+
+  # If true, write the fixed and moving images used as runner inputs to the
+  # output directory for inspection/debugging.
+  write_input_images: false

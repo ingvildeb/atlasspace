@@ -1,0 +1,36 @@
+# Template for running one registration preset across multiple images using one
+# shared image.
+#
+# Behavior:
+# - If output_subdir_name is set, outputs are written to:
+#     {run_image_parent}/{output_subdir_name}
+# - shared_image_role controls whether the shared image is used as the fixed
+#   image or the moving image in each registration.
+
+registration_preset: C:\Users\YourName\Documents\GitHub\atlasbuilder\configs\registration_presets\baseline_syn_kimlab.yaml
+output_subdir_name: registration_baseline_syn_kimlab
+shared_image_role: moving
+orientation_alignment: none
+
+shared_image:
+  image_id: "shared_template"
+  image: Z:\path\to\template.nii.gz
+  space:
+    space_name: template_space
+    orientation: las
+    resolution_um: [20.0, 20.0, 20.0]
+
+run_images:
+  - image_id: "100478"
+    image: Z:\path\to\100478_ch1_iso20um.nii.gz
+    space:
+      space_name: subject_space
+      orientation: las
+      resolution_um: [20.0, 20.0, 20.0]
+
+  - image_id: "100581"
+    image: Z:\path\to\100581_ch1_iso20um.nii.gz
+    space:
+      space_name: subject_space
+      orientation: las
+      resolution_um: [20.0, 20.0, 20.0]

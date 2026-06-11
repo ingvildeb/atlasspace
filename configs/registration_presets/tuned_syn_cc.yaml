@@ -1,0 +1,47 @@
+# Tuned SyN preset carried forward from registration troubleshooting.
+# This is the conservative CC-based variant that was selected over the
+# baseline for follow-up comparison work.
+
+name: tuned_syn_cc
+description: Tuned conservative CC-based SyN preset at 20 um.
+
+preprocessing:
+  # Allowed values: null, zscore, robust_zscore
+  intensity_normalization: null
+
+  # Optional clipping and rescaling of intensity tails.
+  minmax_clip_percentiles: null
+
+  # Histogram-match the moving image to the fixed image before registration.
+  histogram_match: false
+
+  # Optional Gaussian smoothing in voxel units before registration.
+  gaussian_sigma_vox: null
+
+registration:
+  working_resolution_um: 20
+  transform_type: SyN
+
+  # Affine-stage settings remain matched to the Kim lab baseline.
+  aff_metric: mattes
+  aff_sampling: 32
+  aff_random_sampling_rate: 0.25
+  aff_iterations: [1000, 1000, 1000]
+  aff_shrink_factors: [12, 8, 4]
+  aff_smoothing_sigmas: [4, 3, 2]
+
+  # Tuned deformable-stage settings from the troubleshooting follow-up.
+  syn_metric: CC
+  syn_sampling: 2
+  syn_gradient_step: 0.05
+  syn_flow_sigma: 4.0
+  syn_total_sigma: 0.0
+  syn_reg_iterations: [1000, 1000, 500, 250]
+
+execution:
+  threads: 32
+  singleprecision: true
+  use_legacy_histogram_matching: false
+  verbose: true
+  random_seed: 0
+  write_input_images: false

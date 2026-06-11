@@ -1,0 +1,24 @@
+# Example batch config for atlasbuilder registration.
+# Copy this file and update the paths for your own machine/data.
+
+shared_image_role: moving
+orientation_alignment: fixed_to_moving
+
+shared_image:
+  image_id: "shared_template"
+  image: C:\Users\SmartBrain_32C_TR\Documents\GitHub\standard_test_data\atlasbuilder\registration\moving_preprocessed.nii.gz
+  space:
+    space_name: template_space
+    orientation: las
+    resolution_um: [20.0, 20.0, 20.0]
+
+registration_preset: C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder\configs\registration_presets\baseline_syn_kimlab.yaml
+output_subdir_name: registration_example_batch
+
+run_images:
+  - image_id: "100478"
+    image: C:\Users\SmartBrain_32C_TR\Documents\GitHub\standard_test_data\atlasbuilder\registration\100478_rotated_chx.nii.gz
+    space:
+      space_name: subject_space
+      orientation: las
+      resolution_um: [20.0, 20.0, 20.0]

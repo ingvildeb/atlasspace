@@ -1,0 +1,31 @@
+# Example sweep config for template-to-template registration against CCFv3.
+# This assumes the moving template has already been pose standardized to match
+# the intended CCFv3 orientation convention closely enough that no additional
+# run-level reorientation is needed.
+
+shared_image_role: fixed
+orientation_alignment: none
+
+shared_image:
+  image_id: "ccfv3_p56_iso20um"
+  image: Z:\Labmembers\Ingvild\Atlasing\resources\ccfv3_preprocessed\2_resized\T_P56_CCFv3_iso20um_coronal_1px_resized.nii.gz
+  space:
+    space_name: ccfv3_p56
+    orientation: lsp
+    resolution_um: [20.0, 20.0, 20.0]
+
+registration_presets:
+  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder\configs\registration_presets\baseline_syn_kimlab.yaml
+  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder\configs\registration_presets\baseline_syn_kimlab_histmatch.yaml
+  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder\configs\registration_presets\tuned_syn_cc.yaml
+  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder\configs\registration_presets\tuned_syn_cc_histmatch.yaml
+
+output_root: Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_registration_sweeps\template0_masked_pose_standardized_vs_ccfv3
+
+run_images:
+  - image_id: "lsfm_neun_p56_template0"
+    image: Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_variants\T_P56_iteration0_n5_NeuN_template0_masked_pose_standardized.nii.gz
+    space:
+      space_name: lsfm_neun_p56_template0
+      orientation: lsp
+      resolution_um: [20.0, 20.0, 20.0]
