@@ -60,7 +60,7 @@ The config model definitions live in:
 
 The runtime execution models planned for the registration module should live in:
 
-- `src/atlasbuilder/registration/runtime_models.py`
+- `src/atlasbuilder/runtime/registration.py`
 
 ### `RegistrationParametersConfig`
 
@@ -215,9 +215,6 @@ The prepared registration inputs are always saved as:
 
 Inside `src/atlasbuilder/registration/`, the current intended structure is:
 
-- `runtime_models.py`
-  Internal runtime dataclasses and result containers.
-
 - `presets.py`
   Optional helpers for named presets, if needed beyond YAML.
 
@@ -233,6 +230,10 @@ Inside `src/atlasbuilder/registration/`, the current intended structure is:
 
 - `antspy_registration.py`
   ANTsPy-specific registration execution.
+
+Related runtime dataclasses live in:
+
+- `src/atlasbuilder/runtime/registration.py`
 
 - `results.py`
   Summaries and conversion of run results into tabular form.
