@@ -71,7 +71,18 @@ def _load_landmarks(
     reference_name: str,
 ) -> tuple[TemplateLandmarks, TemplateLandmarks]:
     df = pd.read_excel(sheet_path)
-    required_columns = {"template", "Ws", "Wh", "Wc", "CCs", "CCh", "CCc"}
+    required_columns = {
+        "template",
+        "Ws",
+        "Wh",
+        "Wc",
+        "CCs",
+        "CCh",
+        "CCc",
+        "SPLs",
+        "SPLh",
+        "SPLc",
+    }
     missing_columns = required_columns.difference(df.columns)
     if missing_columns:
         raise ValueError(
@@ -102,6 +113,11 @@ def _load_landmarks(
             ("CCs", "CCh", "CCc"),
             f"{template_name} central canal",
         ),
+        splenium=_parse_coordinate_triplet(
+            template_row,
+            ("SPLs", "SPLh", "SPLc"),
+            f"{template_name} splenium",
+        ),
     )
     reference_landmarks = TemplateLandmarks(
         whs=_parse_coordinate_triplet(
@@ -114,63 +130,63 @@ def _load_landmarks(
             ("CCs", "CCh", "CCc"),
             f"{reference_name} central canal",
         ),
+        splenium=_parse_coordinate_triplet(
+            reference_row,
+            ("SPLs", "SPLh", "SPLc"),
+            f"{reference_name} splenium",
+        ),
     )
     return source_landmarks, reference_landmarks
 
 
-def main() -> None:
-    masked_output = _with_suffix(TEMPLATE_FILE, "_masked")
-    standardized_output = _with_suffix(masked_output, "_pose_standardized")
-    template_config = ImageConfig(
-        image_id=TEMPLATE_FILE.stem.split(".")[0],
-        image=TEMPLATE_FILE,
-        space=SpaceDefinition(
-            space_name=TEMPLATE_NAME,
-            orientation=TEMPLATE_ORIENTATION,
-            resolution_um=TEMPLATE_RESOLUTION_UM,
-        ),
-    )
-    mask_config = ImageConfig(
-        image_id=MASK_FILE.stem.split(".")[0],
-        image=MASK_FILE,
-        space=SpaceDefinition(
-            space_name=f"{TEMPLATE_NAME}_mask",
-            orientation=TEMPLATE_ORIENTATION,
-            resolution_um=TEMPLATE_RESOLUTION_UM,
-        ),
-    )
+masked_output = _with_suffix(TEMPLATE_FILE, "_masked")
+standardized_output = _with_suffix(masked_output, "_pose_standardized")
+template_config = ImageConfig(
+    image_id=TEMPLATE_FILE.stem.split(".")[0],
+    image=TEMPLATE_FILE,
+    space=SpaceDefinition(
+        space_name=TEMPLATE_NAME,
+        orientation=TEMPLATE_ORIENTATION,
+        resolution_um=TEMPLATE_RESOLUTION_UM,
+    ),
+)
+mask_config = ImageConfig(
+    image_id=MASK_FILE.stem.split(".")[0],
+    image=MASK_FILE,
+    space=SpaceDefinition(
+        space_name=f"{TEMPLATE_NAME}_mask",
+        orientation=TEMPLATE_ORIENTATION,
+        resolution_um=TEMPLATE_RESOLUTION_UM,
+    ),
+)
 
-    print(f"Masking template:\n  image: {TEMPLATE_FILE}\n  mask:  {MASK_FILE}")
-    masked_config = apply_binary_mask(
-        image_config=template_config,
-        mask_config=mask_config,
-        output_path=masked_output,
-        fill_value=FILL_VALUE,
-    )
-    print(f"Masked template saved to:\n  {masked_output}")
+print(f"Masking template:\n  image: {TEMPLATE_FILE}\n  mask:  {MASK_FILE}")
+masked_config = apply_binary_mask(
+    image_config=template_config,
+    mask_config=mask_config,
+    output_path=masked_output,
+    fill_value=FILL_VALUE,
+)
+print(f"Masked template saved to:\n  {masked_output}")
 
-    source_landmarks, reference_landmarks = _load_landmarks(
-        LANDMARK_FILE,
-        TEMPLATE_NAME,
-        REFERENCE_TEMPLATE_NAME,
-    )
+source_landmarks, reference_landmarks = _load_landmarks(
+    LANDMARK_FILE,
+    TEMPLATE_NAME,
+    REFERENCE_TEMPLATE_NAME,
+)
 
-    print(
-        "Standardizing pose using landmarks:\n"
-        f"  source template:   {TEMPLATE_NAME}\n"
-        f"  reference template:{REFERENCE_TEMPLATE_NAME}"
-    )
-    standardize_image_pose(
-        image_config=masked_config,
-        output_path=standardized_output,
-        source_landmarks=source_landmarks,
-        reference_landmarks=reference_landmarks,
-        coordinate_base=COORDINATE_BASE,
-        interpolation=INTERPOLATION,
-        fill_value=FILL_VALUE,
-    )
-    print(f"Pose-standardized template saved to:\n  {standardized_output}")
-
-
-if __name__ == "__main__":
-    main()
+print(
+    "Standardizing pose using landmarks:\n"
+    f"  source template:   {TEMPLATE_NAME}\n"
+    f"  reference template:{REFERENCE_TEMPLATE_NAME}"
+)
+standardized_config = standardize_image_pose(
+    image_config=masked_config,
+    output_path=standardized_output,
+    source_landmarks=source_landmarks,
+    reference_landmarks=reference_landmarks,
+    coordinate_base=COORDINATE_BASE,
+    interpolation=INTERPOLATION,
+    fill_value=FILL_VALUE,
+)
+print(f"Pose-standardized template saved to:\n  {standardized_config.image}")

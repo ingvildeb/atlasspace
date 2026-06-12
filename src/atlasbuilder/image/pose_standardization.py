@@ -22,6 +22,7 @@ from atlasbuilder.io.nifti import write_nifti_from_array
 class TemplateLandmarks:
     whs: np.ndarray
     central_canal: np.ndarray
+    splenium: np.ndarray
 
 
 def _validate_landmark_array(name: str, coords: np.ndarray) -> np.ndarray:
@@ -42,7 +43,11 @@ def _validate_landmarks(
     shape: tuple[int, int, int],
     label: str,
 ) -> None:
-    for name, coords in (("WHS", landmarks.whs), ("central canal", landmarks.central_canal)):
+    for name, coords in (
+        ("WHS", landmarks.whs),
+        ("central canal", landmarks.central_canal),
+        ("splenium", landmarks.splenium),
+    ):
         if np.any(coords < 0):
             raise ValueError(f"{label} {name} coordinate {tuple(coords)} is negative.")
         if np.any(coords >= np.array(shape)):
@@ -58,64 +63,48 @@ def _validate_landmarks(
         )
 
 
-def _build_yaw_matrix(ds: float, dc: float) -> tuple[np.ndarray, float]:
-    yaw_angle = np.arctan2(ds, dc)
-    cos_a = np.cos(yaw_angle)
-    sin_a = np.sin(yaw_angle)
-    rotation = np.array(
-        [
-            [cos_a, 0.0, -sin_a],
-            [0.0, 1.0, 0.0],
-            [sin_a, 0.0, cos_a],
-        ],
-        dtype=np.float64,
+def _normalize_vector(vector: np.ndarray, label: str) -> np.ndarray:
+    norm = float(np.linalg.norm(vector))
+    if norm <= 0:
+        raise ValueError(f"{label} must not have zero length.")
+    return vector / norm
+
+
+def _build_landmark_frame(
+    landmarks: TemplateLandmarks,
+    label: str,
+) -> np.ndarray:
+    primary_axis = _normalize_vector(
+        landmarks.whs - landmarks.central_canal,
+        f"{label} WHS-central_canal axis",
     )
-    return rotation, yaw_angle
-
-
-def _build_pitch_matrix(
-    current_dh: float,
-    current_dc: float,
-    reference_dh: float,
-    reference_dc: float,
-) -> tuple[np.ndarray, float, float, float]:
-    current_angle = np.arctan2(current_dh, current_dc)
-    reference_angle = np.arctan2(reference_dh, reference_dc)
-    pitch_correction = reference_angle - current_angle
-
-    cos_a = np.cos(pitch_correction)
-    sin_a = np.sin(pitch_correction)
-    rotation = np.array(
-        [
-            [1.0, 0.0, 0.0],
-            [0.0, cos_a, -sin_a],
-            [0.0, sin_a, cos_a],
-        ],
-        dtype=np.float64,
+    splenium_vector = landmarks.splenium - landmarks.whs
+    secondary_seed = splenium_vector - np.dot(splenium_vector, primary_axis) * primary_axis
+    secondary_norm = float(np.linalg.norm(secondary_seed))
+    if secondary_norm <= 1e-6:
+        raise ValueError(
+            f"{label} splenium landmark is too close to collinear with the WHS-central canal axis "
+            "to define a stable 3D frame."
+        )
+    secondary_axis = secondary_seed / secondary_norm
+    tertiary_axis = _normalize_vector(
+        np.cross(primary_axis, secondary_axis),
+        f"{label} tertiary landmark frame axis",
     )
-    return rotation, current_angle, reference_angle, pitch_correction
+    secondary_axis = _normalize_vector(
+        np.cross(tertiary_axis, primary_axis),
+        f"{label} corrected secondary landmark frame axis",
+    )
+    return np.column_stack((primary_axis, secondary_axis, tertiary_axis))
 
 
 def compute_pose_standardization_transform(
     source_landmarks: TemplateLandmarks,
     reference_landmarks: TemplateLandmarks,
 ) -> tuple[np.ndarray, np.ndarray]:
-    template_vector = source_landmarks.whs - source_landmarks.central_canal
-    reference_vector = reference_landmarks.whs - reference_landmarks.central_canal
-
-    yaw_rotation, _ = _build_yaw_matrix(template_vector[0], template_vector[2])
-    template_vector_after_yaw = yaw_rotation @ template_vector
-    reference_vector_after_yaw = reference_vector.copy()
-    reference_vector_after_yaw[2] = np.hypot(reference_vector[0], reference_vector[2])
-
-    pitch_rotation, _, _, _ = _build_pitch_matrix(
-        current_dh=template_vector_after_yaw[1],
-        current_dc=template_vector_after_yaw[2],
-        reference_dh=reference_vector_after_yaw[1],
-        reference_dc=reference_vector_after_yaw[2],
-    )
-
-    combined_rotation = pitch_rotation @ yaw_rotation
+    source_frame = _build_landmark_frame(source_landmarks, "source")
+    reference_frame = _build_landmark_frame(reference_landmarks, "reference")
+    combined_rotation = reference_frame @ source_frame.T
     translation = reference_landmarks.whs - source_landmarks.whs
     return combined_rotation, translation
 
@@ -174,6 +163,10 @@ def standardize_image_pose(
             ),
             coordinate_base,
         ),
+        splenium=_convert_to_zero_based(
+            _validate_landmark_array("source_landmarks.splenium", source_landmarks.splenium),
+            coordinate_base,
+        ),
     )
     reference_landmarks = TemplateLandmarks(
         whs=_convert_to_zero_based(
@@ -183,6 +176,12 @@ def standardize_image_pose(
         central_canal=_convert_to_zero_based(
             _validate_landmark_array(
                 "reference_landmarks.central_canal", reference_landmarks.central_canal
+            ),
+            coordinate_base,
+        ),
+        splenium=_convert_to_zero_based(
+            _validate_landmark_array(
+                "reference_landmarks.splenium", reference_landmarks.splenium
             ),
             coordinate_base,
         ),

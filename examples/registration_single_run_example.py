@@ -13,7 +13,7 @@ from atlasbuilder.config.config_loading import load_registration_parameters_conf
 from atlasbuilder.config.config_models import ImageConfig
 from atlasbuilder.config.space_models import SpaceDefinition
 from atlasbuilder.registration.antspy_registration import run_antspy_registration
-from atlasbuilder.registration.runtime_models import RegistrationJob
+from atlasbuilder.runtime.registration import RegistrationJob
 
 
 # Test data are intentionally kept outside the repo because the NIfTI files can

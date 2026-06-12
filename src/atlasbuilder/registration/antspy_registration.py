@@ -25,7 +25,7 @@ from atlasbuilder.registration.preprocessing import (
     preprocess_registration_images,
     resample_to_resolution,
 )
-from atlasbuilder.registration.runtime_models import RegistrationJob, RegistrationResult
+from atlasbuilder.runtime.registration import RegistrationJob, RegistrationResult
 
 
 def build_antspy_registration_kwargs(

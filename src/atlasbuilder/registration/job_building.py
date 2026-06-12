@@ -9,7 +9,7 @@ from atlasbuilder.config.config_models import (
     RegistrationSweepConfig,
     SharedImageRole,
 )
-from atlasbuilder.registration.runtime_models import RegistrationJob
+from atlasbuilder.runtime.registration import RegistrationJob
 
 
 def derive_batch_output_dir(
