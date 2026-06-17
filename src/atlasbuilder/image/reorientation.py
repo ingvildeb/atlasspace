@@ -80,6 +80,34 @@ def reorient_array_to_match(
     return reoriented_array, reoriented_space
 
 
+def reorient_space_to_match(
+    source_space: SpaceDefinition,
+    target_space: SpaceDefinition,
+) -> SpaceDefinition:
+    if spaces_match_orientation(source_space, target_space):
+        return source_space
+
+    permutation, _ = compute_reorientation_transform(
+        source_space.orientation,
+        target_space.orientation,
+    )
+
+    shape: tuple[int, int, int] | None = None
+    if source_space.shape is not None:
+        shape = tuple(int(source_space.shape[source_axis]) for source_axis in permutation)
+
+    return SpaceDefinition(
+        space_name=source_space.space_name,
+        orientation=target_space.orientation,
+        axis_labels=tuple(source_space.axis_labels[source_axis] for source_axis in permutation),
+        units=source_space.units,
+        resolution_um=tuple(
+            float(source_space.resolution_um[source_axis]) for source_axis in permutation
+        ),
+        shape=shape,
+    )
+
+
 def reorient_image_to_match(
     image_config: ImageConfig,
     target_space: SpaceDefinition,

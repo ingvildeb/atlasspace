@@ -23,6 +23,7 @@ CONFIDENCE_MAX_VALUE = 1.0
 
 
 def _load_array_and_space(image_config: ImageConfig) -> tuple[np.ndarray, SpaceDefinition]:
+    """ Load array and space metadata based on ImageConfig instance """
     nifti = nib.load(str(image_config.image))
     array = np.asanyarray(nifti.dataobj, dtype=np.float32)
     space = validate_or_fill_space_shape(
@@ -39,6 +40,7 @@ def _normalize_array_in_mask(
     lower_percentile: float,
     upper_percentile: float,
 ) -> tuple[np.ndarray, float, float]:
+    """  Normalize an array within a mask and return upper and lower bound values """
     masked_values = image_array[mask_array]
     masked_values = masked_values[np.isfinite(masked_values)]
 
@@ -61,6 +63,7 @@ def _normalize_array_with_reference_bounds(
     lower_bound: float,
     upper_bound: float,
 ) -> np.ndarray:
+    """ Apply a set of normalization bound values to an array """
     if upper_bound <= lower_bound:
         return np.zeros_like(image_array, dtype=np.float32)
 
@@ -73,6 +76,7 @@ def _histogram_match_array_in_mask(
     reference_array: np.ndarray,
     mask_array: np.ndarray,
 ) -> np.ndarray:
+    """ Histogram match one array to another within a mask """
     matched_array = source_array.copy().astype(np.float32)
     source_values = source_array[mask_array]
     reference_values = reference_array[mask_array]
@@ -104,6 +108,7 @@ def _histogram_match_array_in_mask(
 
 
 def _smooth_array(image_array: np.ndarray, sigma_voxels: float) -> np.ndarray:
+    """ Gaussian filter smoothing of an array """
     if sigma_voxels <= 0:
         return image_array.astype(np.float32, copy=False)
     return gaussian_filter(image_array, sigma=sigma_voxels).astype(np.float32)
@@ -116,6 +121,8 @@ def _compute_residual_array(
     residual_mode: Literal["absolute", "relative"],
     template_relative_floor: float,
 ) -> np.ndarray:
+    """ Compute residual differences between two arrays using either 
+        absolute or relative differences """
     absolute_difference = np.abs(subject_array - template_array)
 
     if residual_mode == "absolute":
@@ -143,24 +150,29 @@ def build_confidence_map(
     residual_low_percentile: float = 5.0,
     residual_high_percentile: float = 99.0,
 ) -> ImageConfig:
-    """Build a voxelwise confidence map for one registered subject in template space."""
+    """Build a voxelwise confidence map for one registered subject 
+        in template space."""
     if smoothing_sigma_voxels < 0 or output_smoothing_sigma_voxels < 0:
         raise ValueError("Smoothing sigmas must be nonnegative.")
     if template_relative_floor <= 0:
         raise ValueError("template_relative_floor must be positive.")
 
+    # Load arrays and space metadata for subject, template and mask
     subject_array, subject_space = _load_array_and_space(subject_config)
     template_array, template_space = _load_array_and_space(template_config)
     valid_mask_array, valid_mask_space = _load_array_and_space(valid_mask_config)
 
+    # Validate spaces match and mask is binary
     validate_identical_masking_spaces(subject_space, template_space)
     validate_identical_masking_spaces(subject_space, valid_mask_space)
     validate_binary_mask_array(valid_mask_array)
     valid_mask_bool = valid_mask_array.astype(bool)
 
+    # Convery to arrays
     subject_array = np.nan_to_num(subject_array, nan=0.0, posinf=0.0, neginf=0.0)
     template_array = np.nan_to_num(template_array, nan=0.0, posinf=0.0, neginf=0.0)
 
+    # Normalize template array within mask and return bounds
     normalized_template_array, template_lower_bound, template_upper_bound = (
         _normalize_array_in_mask(
             template_array,
@@ -170,6 +182,7 @@ def build_confidence_map(
         )
     )
 
+    # Histogram match the subject array to the template array
     if histogram_match:
         matched_subject_array = _histogram_match_array_in_mask(
             subject_array,
@@ -179,12 +192,14 @@ def build_confidence_map(
     else:
         matched_subject_array = subject_array.copy()
 
+    # Normalize the subject array using the template-derived bounds
     normalized_subject_array = _normalize_array_with_reference_bounds(
         matched_subject_array,
         template_lower_bound,
         template_upper_bound,
     )
 
+    # Smooth subject and template arrays
     smoothed_subject_array = _smooth_array(
         normalized_subject_array,
         smoothing_sigma_voxels,
@@ -194,6 +209,7 @@ def build_confidence_map(
         smoothing_sigma_voxels,
     )
 
+    # Compute the residual array for subject and template
     residual_array = _compute_residual_array(
         smoothed_subject_array,
         smoothed_template_array,
@@ -209,6 +225,8 @@ def build_confidence_map(
         np.percentile(masked_residual_values, residual_high_percentile)
     )
 
+    # Scale residual array to values between 0 and 1
+    # Compute confidence array by 1 - scaled residual
     if residual_high_bound <= residual_low_bound:
         confidence_array = np.ones_like(residual_array, dtype=np.float32)
     else:
@@ -223,8 +241,11 @@ def build_confidence_map(
             CONFIDENCE_MIN_VALUE,
             CONFIDENCE_MAX_VALUE,
         ).astype(np.float32)
+
+    # Mask the final confidence array
     confidence_array = confidence_array * valid_mask_bool.astype(np.float32)
 
+    # Smooth confidence array
     if output_smoothing_sigma_voxels > 0:
         confidence_array = _smooth_array(confidence_array, output_smoothing_sigma_voxels)
         confidence_array = np.clip(
@@ -237,7 +258,11 @@ def build_confidence_map(
     output_space = subject_space.model_copy(
         update={"shape": tuple(int(v) for v in confidence_array.shape)}
     )
+
+    # Write confidence array nifti
     write_nifti_from_array(confidence_array, output_space, output_path)
+
+    # Return ImageConfig objects
     return build_output_image_config(subject_config, output_path, output_space)
 
 
@@ -255,12 +280,20 @@ def confidence_to_weight_map(
         raise ValueError("confidence_power must be positive.")
 
     confidence_array, confidence_space = _load_array_and_space(confidence_config)
+
+    # Apply cutoff so that only voxels with confidence > cutoff gets weight
     shifted_confidence = (confidence_array - confidence_cutoff) / (1.0 - confidence_cutoff)
     shifted_confidence = np.clip(shifted_confidence, 0.0, 1.0)
+
+    # Apply power formula to amplify higher weights more
     weight_array = np.power(shifted_confidence, confidence_power).astype(np.float32)
 
     output_space = confidence_space.model_copy(
         update={"shape": tuple(int(v) for v in weight_array.shape)}
     )
+
+    # Write weight array nifti
     write_nifti_from_array(weight_array, output_space, output_path)
+
+    # Return ImageConfig objects
     return build_output_image_config(confidence_config, output_path, output_space)

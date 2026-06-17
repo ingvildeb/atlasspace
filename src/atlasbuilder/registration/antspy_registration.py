@@ -219,6 +219,8 @@ def _save_registration_outputs(
     output_dir: Path,
     warped_native: ants.ANTsImage | None,
     inverse_warped_native: ants.ANTsImage | None,
+    fixed_output_space: SpaceDefinition,
+    moving_output_space: SpaceDefinition,
     forward_transforms: list[str],
     inverse_transforms: list[str],
 ) -> tuple[Path | None, Path | None, list[Path], list[Path]]:
@@ -227,11 +229,19 @@ def _save_registration_outputs(
 
     if warped_native is not None:
         warped_path = output_dir / "ANTsPy_Warped.nii.gz"
-        ants.image_write(warped_native, str(warped_path))
+        write_nifti_from_array(
+            warped_native.numpy(),
+            fixed_output_space,
+            warped_path,
+        )
 
     if inverse_warped_native is not None:
         inverse_warped_path = output_dir / "ANTsPy_InverseWarped.nii.gz"
-        ants.image_write(inverse_warped_native, str(inverse_warped_path))
+        write_nifti_from_array(
+            inverse_warped_native.numpy(),
+            moving_output_space,
+            inverse_warped_path,
+        )
 
     forward_transform_paths = [Path(path) for path in forward_transforms]
     inverse_transform_paths = [Path(path) for path in inverse_transforms]
@@ -362,6 +372,8 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             job.output_dir,
             warped_native,
             inverse_warped_native,
+            fixed_space,
+            moving_space,
             forward_transforms,
             inverse_transforms,
         )
@@ -373,6 +385,10 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             preset_name=job.parameters.name,
             output_dir=job.output_dir,
             success=True,
+            declared_fixed_space=job.fixed_image_config.space,
+            declared_moving_space=job.moving_image_config.space,
+            effective_fixed_space=fixed_space,
+            effective_moving_space=moving_space,
             runtime_seconds=runtime_seconds,
             warped_image=warped_path,
             inverse_warped_image=inverse_warped_path,
@@ -401,6 +417,10 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             preset_name=job.parameters.name,
             output_dir=job.output_dir,
             success=False,
+            declared_fixed_space=job.fixed_image_config.space,
+            declared_moving_space=job.moving_image_config.space,
+            effective_fixed_space=fixed_space,
+            effective_moving_space=moving_space,
             runtime_seconds=runtime_seconds,
             warped_image=None,
             inverse_warped_image=None,

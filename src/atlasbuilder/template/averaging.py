@@ -19,6 +19,7 @@ from atlasbuilder.runtime.template import TemplateAccumulationResult
 
 
 def _load_array_and_space(image_config: ImageConfig) -> tuple[np.ndarray, SpaceDefinition]:
+    """ Load array and space metadata based on ImageConfig instance """
     nifti = nib.load(str(image_config.image))
     array = np.asanyarray(nifti.dataobj, dtype=np.float32)
     space = validate_or_fill_space_shape(
@@ -34,6 +35,7 @@ def _validate_sequence_lengths(
     valid_mask_configs: Sequence[ImageConfig],
     confidence_configs: Sequence[ImageConfig] | None,
 ) -> None:
+    """ Validate that length of subject, weight, mask and confidence files are the same """
     if not subject_configs:
         raise ValueError("subject_configs must not be empty.")
     if len(weight_configs) != len(subject_configs):
@@ -52,6 +54,7 @@ def accumulate_template_inputs(
     confidence_configs: Sequence[ImageConfig] | None = None,
 ) -> TemplateAccumulationResult:
     """Accumulate voxelwise sums and support maps for one template-update round."""
+
     _validate_sequence_lengths(
         subject_configs,
         weight_configs,
@@ -63,15 +66,19 @@ def accumulate_template_inputs(
     reference_array, reference_space = _load_array_and_space(reference_config)
     array_shape = reference_array.shape
 
+    # Initiate arrays
     weighted_sum = np.zeros(array_shape, dtype=np.float32)
     weight_sum = np.zeros(array_shape, dtype=np.float32)
     plain_sum = np.zeros(array_shape, dtype=np.float32)
+    valid_support_count = np.zeros(array_shape, dtype=np.float32)
     support_count = np.zeros(array_shape, dtype=np.float32)
     confidence_sum = (
         np.zeros(array_shape, dtype=np.float32) if confidence_configs is not None else None
     )
-
+    
+    # Loop through subjects
     for index, subject_config in enumerate(subject_configs):
+        # Load and validate subject, weight and mask array
         subject_array, subject_space = _load_array_and_space(subject_config)
         validate_identical_masking_spaces(reference_space, subject_space)
 
@@ -85,12 +92,21 @@ def accumulate_template_inputs(
         validate_binary_mask_array(valid_mask_array)
         valid_mask_bool = valid_mask_array.astype(bool)
 
+        # Accumulate voxelwise values from the subject to the weighted_sum, 
+        # multiplying by its voxelwise weight
         weighted_sum[valid_mask_bool] += (
             subject_array[valid_mask_bool] * weight_array[valid_mask_bool]
         )
+
+        # Accumulate weights of the subject to the weigt_sum array
         weight_sum[valid_mask_bool] += weight_array[valid_mask_bool]
+
+        # Accumulate voxelwise values to plain_sum
         plain_sum[valid_mask_bool] += subject_array[valid_mask_bool]
-        support_count[valid_mask_bool] += 1.0
+        valid_support_count[valid_mask_bool] += 1.0
+
+        positive_weight_mask = valid_mask_bool & (weight_array > 0)
+        support_count[positive_weight_mask] += 1.0
 
         if confidence_configs is not None and confidence_sum is not None:
             confidence_array, confidence_space = _load_array_and_space(confidence_configs[index])
@@ -102,6 +118,7 @@ def accumulate_template_inputs(
         weighted_sum=weighted_sum,
         weight_sum=weight_sum,
         plain_sum=plain_sum,
+        valid_support_count=valid_support_count,
         support_count=support_count,
         confidence_sum=confidence_sum,
         subject_count=len(subject_configs),
@@ -113,8 +130,14 @@ def finalize_weighted_average_template(
     output_path: Path,
 ) -> ImageConfig:
     """Write the voxelwise weighted average from an accumulated template round."""
+
+    # Initialize output array
     output_array = np.zeros_like(accumulation.weighted_sum, dtype=np.float32)
+
+    # Identify voxels with nonzero total weight
     nonzero_mask = accumulation.weight_sum > 0
+
+    # Divide weighted_sum by weight_sum to obtain the weighted average
     output_array[nonzero_mask] = (
         accumulation.weighted_sum[nonzero_mask] / accumulation.weight_sum[nonzero_mask]
     )
@@ -122,7 +145,11 @@ def finalize_weighted_average_template(
     output_space = accumulation.reference_config.space.model_copy(
         update={"shape": tuple(int(v) for v in output_array.shape)}
     )
+
+    # Write weighted-average nifti
     write_nifti_from_array(output_array, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(accumulation.reference_config, output_path, output_space)
 
 
@@ -131,16 +158,27 @@ def finalize_plain_average_template(
     output_path: Path,
 ) -> ImageConfig:
     """Write the voxelwise plain average from an accumulated template round."""
+
+    # Initialize output array
     output_array = np.zeros_like(accumulation.plain_sum, dtype=np.float32)
-    nonzero_mask = accumulation.support_count > 0
+
+    # Identify voxels with at least one valid contributing subject
+    nonzero_mask = accumulation.valid_support_count > 0
+
+    # Divide plain_sum by valid_support_count to obtain the plain average
     output_array[nonzero_mask] = (
-        accumulation.plain_sum[nonzero_mask] / accumulation.support_count[nonzero_mask]
+        accumulation.plain_sum[nonzero_mask]
+        / accumulation.valid_support_count[nonzero_mask]
     )
 
     output_space = accumulation.reference_config.space.model_copy(
         update={"shape": tuple(int(v) for v in output_array.shape)}
     )
+
+    # Write plain-average nifti
     write_nifti_from_array(output_array, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(accumulation.reference_config, output_path, output_space)
 
 
@@ -149,10 +187,15 @@ def build_weight_sum_image(
     output_path: Path,
 ) -> ImageConfig:
     """Write the summed voxelwise weight image for QC and downstream blending."""
+
     output_space = accumulation.reference_config.space.model_copy(
         update={"shape": tuple(int(v) for v in accumulation.weight_sum.shape)}
     )
+
+    # Write weight-sum nifti
     write_nifti_from_array(accumulation.weight_sum, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(accumulation.reference_config, output_path, output_space)
 
 
@@ -160,11 +203,16 @@ def build_support_count_image(
     accumulation: TemplateAccumulationResult,
     output_path: Path,
 ) -> ImageConfig:
-    """Write the voxelwise count of contributing subjects inside the valid masks."""
+    """Write the voxelwise count of subjects with positive weight contribution."""
+
     output_space = accumulation.reference_config.space.model_copy(
         update={"shape": tuple(int(v) for v in accumulation.support_count.shape)}
     )
+
+    # Write support-count nifti
     write_nifti_from_array(accumulation.support_count, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(accumulation.reference_config, output_path, output_space)
 
 
@@ -173,16 +221,27 @@ def build_mean_weight_image(
     output_path: Path,
 ) -> ImageConfig:
     """Write the mean voxelwise weight among contributing subjects."""
+
+    # Initialize output array
     output_array = np.zeros_like(accumulation.weight_sum, dtype=np.float32)
-    nonzero_mask = accumulation.support_count > 0
+
+    # Identify voxels with at least one valid contributing subject
+    nonzero_mask = accumulation.valid_support_count > 0
+
+    # Divide weight_sum by valid_support_count to obtain the mean weight
     output_array[nonzero_mask] = (
-        accumulation.weight_sum[nonzero_mask] / accumulation.support_count[nonzero_mask]
+        accumulation.weight_sum[nonzero_mask]
+        / accumulation.valid_support_count[nonzero_mask]
     )
 
     output_space = accumulation.reference_config.space.model_copy(
         update={"shape": tuple(int(v) for v in output_array.shape)}
     )
+
+    # Write mean-weight nifti
     write_nifti_from_array(output_array, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(accumulation.reference_config, output_path, output_space)
 
 
@@ -196,16 +255,26 @@ def build_mean_confidence_image(
             "Mean confidence image requires confidence_sum data in TemplateAccumulationResult."
         )
 
+    # Initialize output array
     output_array = np.zeros_like(accumulation.confidence_sum, dtype=np.float32)
-    nonzero_mask = accumulation.support_count > 0
+
+    # Identify voxels with at least one valid contributing subject
+    nonzero_mask = accumulation.valid_support_count > 0
+
+    # Divide confidence_sum by valid_support_count to obtain the mean confidence
     output_array[nonzero_mask] = (
-        accumulation.confidence_sum[nonzero_mask] / accumulation.support_count[nonzero_mask]
+        accumulation.confidence_sum[nonzero_mask]
+        / accumulation.valid_support_count[nonzero_mask]
     )
 
     output_space = accumulation.reference_config.space.model_copy(
         update={"shape": tuple(int(v) for v in output_array.shape)}
     )
+
+    # Write mean-confidence nifti
     write_nifti_from_array(output_array, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(accumulation.reference_config, output_path, output_space)
 
 
@@ -221,18 +290,26 @@ def blend_template_with_new_average(
     if existing_template_subject_count <= 0:
         raise ValueError("existing_template_subject_count must be positive.")
 
+    # Load current template, new average and support count arrays
     current_array, current_space = _load_array_and_space(current_template_config)
     new_average_array, new_average_space = _load_array_and_space(new_average_config)
     support_count_array, support_count_space = _load_array_and_space(support_count_config)
 
+    # Validate spaces match between current template, average and support count
     validate_identical_masking_spaces(current_space, new_average_space)
     validate_identical_masking_spaces(current_space, support_count_space)
 
     if np.any(support_count_array < 0):
         raise ValueError("Support count image must not contain negative values.")
 
+    # Start from the current template so voxels with zero new support remain unchanged
     output_array = current_array.copy()
+
+    # Identify voxels with support from the new average
     supported_mask = support_count_array > 0
+
+    # Blend current template and new average using template subject count
+    # and the voxelwise support count from the new round
     output_array[supported_mask] = (
         (current_array[supported_mask] * existing_template_subject_count)
         + (new_average_array[supported_mask] * support_count_array[supported_mask])
@@ -243,5 +320,9 @@ def blend_template_with_new_average(
     output_space = current_space.model_copy(
         update={"shape": tuple(int(v) for v in output_array.shape)}
     )
+
+    # Write blended-template nifti
     write_nifti_from_array(output_array, output_space, output_path)
+
+    # Return ImageConfig object
     return build_output_image_config(current_template_config, output_path, output_space)

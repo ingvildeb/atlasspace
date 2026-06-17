@@ -11,6 +11,7 @@ The current core focus is:
 - explicit image-space metadata through `ImageConfig` and `SpaceDefinition`
 - reusable image operations such as masking, reorientation, resampling, and symmetry
 - ANTsPy-based registration helpers
+- ANTsPy-based transform application for images, segmentations, and points
 - template confidence mapping, weighted averaging, and template blending
 
 The guiding design principle is to keep reusable library code here while
@@ -59,6 +60,8 @@ Importable package code lives under `src/atlasbuilder/`.
   NIfTI and NRRD helpers
 - `registration/`
   registration execution helpers and job-building utilities
+- `transforms/`
+  transform-sequence construction, transform application, and transform-list helpers
 - `runtime/`
   runtime dataclasses used by registration and template workflows
 - `template/`
@@ -76,12 +79,24 @@ Registration is config-driven and centered on:
 - batch and sweep run configs
 - `run_antspy_registration(...)`
 - `build_batch_jobs(...)` and `build_sweep_jobs(...)`
+- `TransformSequence.from_registration_result(...)`
+- `transform_image(...)`, `transform_segmentation(...)`, and `transform_points(...)`
 
 Examples live under `examples/`:
 
 - `registration_single_run_example.py`
 - `registration_batch_run_example.py`
 - `registration_sweep_run_example.py`
+- `debug_transform_application.py`
+
+Transform application is intentionally registration-faithful:
+
+- forward application reproduces the registration `Warped` result
+- inverse application reproduces the registration `InverseWarped` result
+- if orientation alignment was used during registration, atlasbuilder reorients inputs into the
+  effective registration spaces before applying transforms
+- transformed outputs remain in those effective registration spaces by default, matching the
+  registration products they are meant to reproduce
 
 ### Template updating
 
@@ -122,6 +137,7 @@ functions without needing to reimplement the core spatial logic.
 The repo is now beyond the initial planning phase and has working code for:
 
 - registration
+- transform application for volumes, segmentations, and points
 - image preparation and space handling
 - template confidence-map generation
 - weighted template updating

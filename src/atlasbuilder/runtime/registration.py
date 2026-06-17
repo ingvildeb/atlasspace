@@ -8,6 +8,7 @@ from atlasbuilder.config.config_models import (
     OrientationAlignmentMode,
     RegistrationParametersConfig,
 )
+from atlasbuilder.config.space_models import SpaceDefinition
 
 
 @dataclass
@@ -26,6 +27,10 @@ class RegistrationResult:
     preset_name: str
     output_dir: Path
     success: bool
+    declared_fixed_space: SpaceDefinition
+    declared_moving_space: SpaceDefinition
+    effective_fixed_space: SpaceDefinition
+    effective_moving_space: SpaceDefinition
     runtime_seconds: float | None = None
     warped_image: Path | None = None
     inverse_warped_image: Path | None = None

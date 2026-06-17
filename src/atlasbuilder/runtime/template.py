@@ -13,6 +13,7 @@ class TemplateAccumulationResult:
     weighted_sum: np.ndarray
     weight_sum: np.ndarray
     plain_sum: np.ndarray
+    valid_support_count: np.ndarray
     support_count: np.ndarray
     confidence_sum: np.ndarray | None = None
     subject_count: int = 0
