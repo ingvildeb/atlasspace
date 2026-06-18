@@ -1,146 +1,138 @@
-# atlasbuilder
+# atlasspace
 
-Tools for working with volumetric brain data as part of atlas generation,
-registration, and atlas-based mapping workflows.
+`atlasspace` is a reusable Python package for spatial image preparation, registration, transform application, and template-space workflows for volumetric brain data.
 
-## What this repo is for
+It is designed for cases where orientation, resolution, and space relationships need to be explicit and inspectable, rather than left implicit in scattered assumptions or file headers. The package focuses on reusable building blocks that can support both one-off analysis and larger downstream workflows.
 
-`atlasbuilder` is a reusable Python package for atlas-space image workflows.
-The current core focus is:
+`atlasspace` currently supports:
 
-- explicit image-space metadata through `ImageConfig` and `SpaceDefinition`
-- reusable image operations such as masking, reorientation, resampling, and symmetry
+- explicit spatial metadata handling through `SpaceDefinition` and `ImageConfig`
+- reusable image operations such as masking, reorientation, resampling, resizing, and symmetry helpers
 - ANTsPy-based registration helpers
-- ANTsPy-based transform application for images, segmentations, and points
-- template confidence mapping, weighted averaging, and template blending
+- ANTsPy-based transform application for images, segmentations, and point coordinates
+- iterative template refinement using confidence-based weighted averaging
 
-The guiding design principle is to keep reusable library code here while
-keeping more opinionated project workflows in downstream repos.
+## Core concepts
 
-## Main concepts
+### Spatial metadata
 
-### `SpaceDefinition`
+`SpaceDefinition` stores the spatial metadata of an image volume. This includes:
 
-`SpaceDefinition` stores explicit spatial metadata for a volume, including:
-
-- `orientation`
-- `resolution_um`
+- orientation (following [BrainGlobe three-letter convention](https://brainglobe.info/documentation/setting-up/image-definition.html#orientation))
+- resolution in microns
 - optional `space_name`
 - optional `shape`
 
-This keeps image-space assumptions explicit rather than scattering resolution
-and orientation values across unrelated functions.
+### Image configuration
 
-### `ImageConfig`
+`ImageConfig` stores metadata about an image through:
+- a `path`
+- an `image_id`
+- a `SpaceDefinition`
 
-`ImageConfig` pairs an image path with an `image_id` and a `SpaceDefinition`.
-Most public image, template, and registration helpers operate on
-`ImageConfig` rather than loose file paths.
+Most public image, registration, transform, and template helpers operate on `ImageConfig`.
 
-### Config vs runtime models
+## Installation
 
-The repo separates:
+`atlasspace` is written for Python 3.10+.
 
-- `config/`
-  user-authored configuration models and YAML loading helpers
-- `runtime/`
-  execution-time dataclasses such as registration jobs/results and template
-  accumulation results
+To get started, create a dedicated conda environment:
 
-## Current module layout
+```bash
+conda create -n atlasspace python=3.11
+conda activate atlasspace
+```
 
-Importable package code lives under `src/atlasbuilder/`.
+The intended packaged usage pattern will be:
 
-- `config/`
-  config models, space-definition models, and YAML loading helpers
-- `image/`
-  reusable image operations such as masking, reorientation, pose
-  standardization, resampling, resizing, and symmetry
-- `io/`
-  NIfTI and NRRD helpers
-- `registration/`
-  registration execution helpers and job-building utilities
-- `transforms/`
-  transform-sequence construction, transform application, and transform-list helpers
-- `runtime/`
-  runtime dataclasses used by registration and template workflows
-- `template/`
-  confidence mapping, weighted averaging, blending, and related template logic
+```bash
+pip install atlasspace
+```
 
-## Current workflow areas
+For registration and transform workflows, users will also need:
 
-The repo currently supports two main kinds of reusable workflow building blocks.
+```bash
+pip install antspyx
+```
 
-### Registration
+If you are working from a local checkout during development, installation instructions may differ slightly until the first packaged release is finalized.
 
-Registration is config-driven and centered on:
+## Quick Start
 
-- reusable registration presets in `configs/registration_presets/`
-- batch and sweep run configs
-- `run_antspy_registration(...)`
-- `build_batch_jobs(...)` and `build_sweep_jobs(...)`
-- `TransformSequence.from_registration_result(...)`
-- `transform_image(...)`, `transform_segmentation(...)`, and `transform_points(...)`
+A minimal registration workflow looks like this:
 
-Examples live under `examples/`:
+```python
+from pathlib import Path
 
-- `registration_single_run_example.py`
-- `registration_batch_run_example.py`
-- `registration_sweep_run_example.py`
-- `debug_transform_application.py`
+from atlasspace import ImageConfig, SpaceDefinition, registration
 
-Transform application is intentionally registration-faithful:
+preset = registration.load_registration_parameters_config(
+    Path("configs/registration_presets/tuned_syn_cc.yaml")
+)
 
-- forward application reproduces the registration `Warped` result
-- inverse application reproduces the registration `InverseWarped` result
-- if orientation alignment was used during registration, atlasbuilder reorients inputs into the
-  effective registration spaces before applying transforms
-- transformed outputs remain in those effective registration spaces by default, matching the
-  registration products they are meant to reproduce
+fixed_image = ImageConfig(
+    image_id="subject_001",
+    image=Path("subject_001.nii.gz"),
+    space=SpaceDefinition(
+        space_name="subject_001",
+        orientation="las",
+        resolution_um=(20.0, 20.0, 20.0),
+    ),
+)
 
-### Template updating
+moving_image = ImageConfig(
+    image_id="template_p56",
+    image=Path("template_p56.nii.gz"),
+    space=SpaceDefinition(
+        space_name="template_p56",
+        orientation="lsp",
+        resolution_um=(20.0, 20.0, 20.0),
+    ),
+)
 
-The template module currently focuses on:
+job = registration.RegistrationJob(
+    fixed_image_config=fixed_image,
+    moving_image_config=moving_image,
+    output_dir=Path("outputs/subject_001_registration"),
+    parameters=preset,
+    orientation_alignment="fixed_to_moving",
+)
 
-- voxelwise confidence-map generation from subject-template agreement
-- conversion of confidence maps to weight maps
-- weighted and plain template averaging
-- blending of new-brain averages with an existing template
-- symmetry helpers used after blending
+result = registration.run_antspy_registration(job)
 
-The confidence-map method currently works by:
+print(result.success)
+print(result.warped_image)
+print(result.inverse_warped_image)
+```
 
-1. histogram-matching the subject to the template within a valid mask
-2. normalizing subject and template to a shared `0-1` scale
-3. smoothing both normalized volumes
-4. computing a relative residual
-5. remapping residuals to confidence inside the valid mask
+This example highlights the main workflow:
 
-The current default residual mode is:
+1. load a registration preset
+2. define the fixed and moving images with explicit space metadata
+3. build a `RegistrationJob`
+4. run the registration
+5. use the resulting outputs or transform sequence downstream
 
-`abs(subject - template) / (template + 0.10)`
+## Documentation
 
-where `subject` and `template` are the smoothed, normalized arrays.
+More detailed documentation can be found under `docs/`, for example:
 
-## Examples and supporting scripts
+- `docs/installation.md`
+- `docs/registration.md`
+- `docs/transforms.md`
+- `docs/template_workflows.md`
 
-- `examples/`
-  runnable examples and example config files for registration workflows
-- `workflows/`
-  thin helper scripts that demonstrate specific image-preparation workflows
+## Ecosystem
 
-Downstream repos can build more specialized workflows on top of these library
-functions without needing to reimplement the core spatial logic.
+The intended ecosystem split is:
 
-## Current status
+- `atlasspace`
+  spatial image preparation, registration, transforms, and template operations
+- `atlaslevels`
+  atlas label and hierarchy semantics
+- downstream workflow repositories
+  project- or lab-specific orchestration built on top of these reusable layers
 
-The repo is now beyond the initial planning phase and has working code for:
+## License
 
-- registration
-- transform application for volumes, segmentations, and points
-- image preparation and space handling
-- template confidence-map generation
-- weighted template updating
-
-Documentation is still evolving alongside the code, so the examples and the
-`docs/` notes are both useful references.
+This project is released under the terms of the [LICENSE](LICENSE).
