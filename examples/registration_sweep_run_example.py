@@ -9,9 +9,9 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
 from atlasspace.config.config_loading import (  # noqa: E402
-    load_registration_parameters_config,
     load_registration_sweep_config,
 )
+from atlasspace import registration  # noqa: E402
 from atlasspace.registration.antspy_registration import run_antspy_registration  # noqa: E402
 from atlasspace.registration.job_building import build_sweep_jobs  # noqa: E402
 
@@ -27,7 +27,7 @@ EXAMPLE_SWEEP_CONFIG = (
 def main() -> None:
     sweep_config = load_registration_sweep_config(EXAMPLE_SWEEP_CONFIG)
     parameter_configs = [
-        load_registration_parameters_config(preset_path)
+        registration.load_preset(preset_path)
         for preset_path in sweep_config.registration_presets
     ]
     jobs = build_sweep_jobs(sweep_config, parameter_configs)

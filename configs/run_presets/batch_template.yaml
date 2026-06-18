@@ -6,8 +6,10 @@
 #     {run_image_parent}/{output_subdir_name}
 # - shared_image_role controls whether the shared image is used as the fixed
 #   image or the moving image in each registration.
+# - registration_preset can be either a built-in preset name or a path to a
+#   custom YAML preset file.
 
-registration_preset: C:\Users\YourName\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab.yaml
+registration_preset: baseline_syn_kimlab
 output_subdir_name: registration_baseline_syn_kimlab
 shared_image_role: moving
 orientation_alignment: none

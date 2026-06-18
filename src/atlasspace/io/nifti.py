@@ -9,7 +9,7 @@ try:
 except ImportError as exc:
     raise ImportError(
         "atlasspace.io.nifti requires nibabel. "
-        "Install atlasspace with nibabel available to write normalized NIfTI files."
+        "Install atlasspace with `pip install -e .` or otherwise ensure nibabel is available."
     ) from exc
 
 from atlasspace.config.space_models import SpaceDefinition

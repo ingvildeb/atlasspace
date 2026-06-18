@@ -12,7 +12,7 @@ shared_image:
     orientation: las
     resolution_um: [20.0, 20.0, 20.0]
 
-registration_preset: C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab.yaml
+registration_preset: baseline_syn_kimlab
 output_subdir_name: registration_example_batch
 
 run_images:

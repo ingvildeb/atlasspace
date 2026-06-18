@@ -43,19 +43,25 @@ conda create -n atlasspace python=3.11
 conda activate atlasspace
 ```
 
+For a local editable install during development or beta testing, use:
+
+```bash
+pip install -e .
+```
+
 The intended packaged usage pattern will be:
 
 ```bash
 pip install atlasspace
 ```
 
-For registration and transform workflows, users will also need:
+This installs the core package, including the ANTsPy-based registration and transform functionality:
 
 ```bash
-pip install antspyx
+pip install -e .
 ```
 
-If you are working from a local checkout during development, installation instructions may differ slightly until the first packaged release is finalized.
+This also includes NRRD support through `pynrrd`.
 
 ## Quick Start
 
@@ -66,9 +72,7 @@ from pathlib import Path
 
 from atlasspace import ImageConfig, SpaceDefinition, registration
 
-preset = registration.load_registration_parameters_config(
-    Path("configs/registration_presets/tuned_syn_cc.yaml")
-)
+preset = registration.load_preset("tuned_syn_cc")
 
 fixed_image = ImageConfig(
     image_id="subject_001",

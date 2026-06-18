@@ -5,6 +5,8 @@
 # - output_root is required
 # - each run can be written into a subfolder such as:
 #     {output_root}/{image_id}_{preset_name}
+# - registration_presets entries can be either built-in preset names or paths
+#   to custom YAML preset files.
 
 output_root: Z:\path\to\parameter_sweeps\my_sweep
 shared_image_role: moving
@@ -19,8 +21,8 @@ shared_image:
     resolution_um: [20.0, 20.0, 20.0]
 
 registration_presets:
-  - C:\Users\YourName\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab.yaml
-  - C:\Users\YourName\Documents\GitHub\atlasspace\configs\registration_presets\tuned_syn_cc.yaml
+  - baseline_syn_kimlab
+  - tuned_syn_cc
 
 run_images:
   - image_id: "100478"

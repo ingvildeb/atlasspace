@@ -9,7 +9,7 @@ try:
 except ImportError as exc:
     raise ImportError(
         "atlasspace.transforms.antspy_transformation requires antspyx. "
-        "Install atlasspace in an environment with ANTsPy available to apply transforms."
+        "Install atlasspace with `pip install -e .` or otherwise ensure antspyx is available."
     ) from exc
 
 

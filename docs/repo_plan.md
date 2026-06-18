@@ -62,8 +62,8 @@ Importable package code lives under `src/atlasspace/`.
 
 Config templates and shipped presets live under `configs/`.
 
-- `configs/registration_presets/`
-  Reusable registration method presets.
+- `src/atlasspace/presets/registration/`
+  Built-in reusable registration method presets shipped with the package.
 
 - `configs/run_presets/`
   Templates for batch and sweep runs.

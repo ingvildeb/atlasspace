@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlasspace"
+version = "0.1.0"
+description = "Spatial image preparation, registration, transforms, and template workflows for volumetric brain data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Ingvild E. Bjerke" },
+]
+dependencies = [
+  "antspyx",
+  "nibabel",
+  "numpy",
+  "pandas",
+  "pydantic>=2",
+  "pynrrd",
+  "PyYAML",
+  "scipy",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.package-data]
+"atlasspace.presets.registration" = ["*.yaml"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

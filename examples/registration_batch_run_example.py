@@ -10,8 +10,8 @@ if str(SRC_ROOT) not in sys.path:
 
 from atlasspace.config.config_loading import (  # noqa: E402
     load_registration_batch_config,
-    load_registration_parameters_config,
 )
+from atlasspace import registration  # noqa: E402
 from atlasspace.registration.antspy_registration import run_antspy_registration  # noqa: E402
 from atlasspace.registration.job_building import build_batch_jobs  # noqa: E402
 
@@ -21,7 +21,7 @@ EXAMPLE_BATCH_CONFIG = REPO_ROOT / "examples" / "configs" / "registration_batch_
 
 def main() -> None:
     batch_config = load_registration_batch_config(EXAMPLE_BATCH_CONFIG)
-    preset = load_registration_parameters_config(batch_config.registration_preset)
+    preset = registration.load_preset(batch_config.registration_preset)
     jobs = build_batch_jobs(batch_config, preset)
     first_job = jobs[0]
 

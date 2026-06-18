@@ -15,10 +15,10 @@ shared_image:
     resolution_um: [20.0, 20.0, 20.0]
 
 registration_presets:
-  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab.yaml
-  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab_histmatch.yaml
-  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasspace\configs\registration_presets\tuned_syn_cc.yaml
-  - C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasspace\configs\registration_presets\tuned_syn_cc_histmatch.yaml
+  - baseline_syn_kimlab
+  - baseline_syn_kimlab_histmatch
+  - tuned_syn_cc
+  - tuned_syn_cc_histmatch
 
 output_root: Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_registration_sweeps\template0_masked_pose_standardized_vs_ccfv3
 

@@ -7,7 +7,7 @@ try:
 except ImportError as exc:
     raise ImportError(
         "atlasspace.io.nrrd requires pynrrd. "
-        "Install atlasspace with pynrrd available to ingest NRRD files."
+        "Install atlasspace with `pip install -e .` or otherwise ensure pynrrd is available."
     ) from exc
 
 from atlasspace.config.config_models import ImageConfig

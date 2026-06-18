@@ -1,6 +1,7 @@
 from atlasspace.config.config_loading import (
+    list_presets,
+    load_preset,
     load_registration_batch_config,
-    load_registration_parameters_config,
     load_registration_sweep_config,
 )
 from atlasspace.registration.antspy_registration import run_antspy_registration
@@ -13,7 +14,8 @@ from atlasspace.runtime.registration import RegistrationJob, RegistrationResult
 __all__ = [
     "RegistrationJob",
     "RegistrationResult",
-    "load_registration_parameters_config",
+    "list_presets",
+    "load_preset",
     "load_registration_batch_config",
     "load_registration_sweep_config",
     "run_antspy_registration",

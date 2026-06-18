@@ -3,16 +3,13 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src"
+SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
-from atlasspace.config.config_loading import load_registration_parameters_config
 from atlasspace.config.config_models import ImageConfig
 from atlasspace.config.space_models import SpaceDefinition
-from atlasspace.registration.antspy_registration import run_antspy_registration
-from atlasspace.runtime.registration import RegistrationJob
+from atlasspace import registration
 
 
 # Test data are intentionally kept outside the repo because the NIfTI files can
@@ -24,12 +21,7 @@ OUTPUT_DIR = TEST_DATA_DIR / "outputs" / "single_run_baseline"
 
 
 def main() -> None:
-    preset = load_registration_parameters_config(
-        REPO_ROOT
-        / "configs"
-        / "registration_presets"
-        / "baseline_syn_kimlab.yaml"
-    )
+    preset = registration.load_preset("baseline_syn_kimlab")
 
     fixed_image = ImageConfig(
         image_id="fixed_template",
@@ -51,7 +43,7 @@ def main() -> None:
         ),
     )
 
-    job = RegistrationJob(
+    job = registration.RegistrationJob(
         fixed_image_config=fixed_image,
         moving_image_config=moving_image,
         output_dir=OUTPUT_DIR,
@@ -59,7 +51,7 @@ def main() -> None:
         orientation_alignment="fixed_to_moving",
     )
 
-    result = run_antspy_registration(job)
+    result = registration.run_antspy_registration(job)
 
     print("Registration finished.")
     print(f"Success: {result.success}")

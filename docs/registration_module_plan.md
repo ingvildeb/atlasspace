@@ -40,6 +40,10 @@ Examples:
 - `baseline_syn_kimlab`
 - `tuned_syn_cc`
 
+Built-in presets are now shipped inside the package under
+`src/atlasspace/presets/registration/`, while users can still point to their
+own custom preset YAML files by path.
+
 ### Batch run
 
 Run one preset across many run images using one shared image with an explicit

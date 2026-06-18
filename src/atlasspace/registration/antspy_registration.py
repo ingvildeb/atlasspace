@@ -13,7 +13,7 @@ try:
 except ImportError as exc:
     raise ImportError(
         "atlasspace.registration.antspy_registration requires antspyx. "
-        "Install atlasspace with the registration dependencies to use this module."
+        "Install atlasspace with `pip install -e .` or otherwise ensure antspyx is available."
     ) from exc
 
 from atlasspace.config.config_models import RegistrationParametersConfig
