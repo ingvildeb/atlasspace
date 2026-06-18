@@ -2,6 +2,10 @@
 
 `atlasspace` is a reusable Python package for spatial image preparation, registration, transform application, and template-space workflows for volumetric brain data.
 
+This is an early-stage, pre-1.0 release. The core architecture is in place, but
+some APIs and workflow patterns may still evolve as the package is tested in
+real use.
+
 `atlasspace` currently supports:
 
 - explicit spatial metadata handling through `SpaceDefinition` and `ImageConfig`

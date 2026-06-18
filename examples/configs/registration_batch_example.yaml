@@ -6,7 +6,7 @@ orientation_alignment: fixed_to_moving
 
 shared_image:
   image_id: "shared_template"
-  image: C:\Users\SmartBrain_32C_TR\Documents\GitHub\standard_test_data\atlasspace\registration\moving_preprocessed.nii.gz
+  image: Z:\path\to\moving_template.nii.gz
   space:
     space_name: template_space
     orientation: las
@@ -17,7 +17,7 @@ output_subdir_name: registration_example_batch
 
 run_images:
   - image_id: "100478"
-    image: C:\Users\SmartBrain_32C_TR\Documents\GitHub\standard_test_data\atlasspace\registration\100478_rotated_chx.nii.gz
+    image: Z:\path\to\100478_ch1_iso20um.nii.gz
     space:
       space_name: subject_space
       orientation: las

@@ -22,16 +22,16 @@ from atlasspace.transforms.antspy_transformation import ants, apply_transform_pa
 # ---------------------------------------------------------------------
 
 REGISTRATION_DIR = Path(
-    r"Z:\LSFM\2025\2025_06\2025_06_12\20250612_11_31_09_IEB_IEB0023_F_P56_Aldh1_LAS_488Bg_561NeuN_640Iba1_4x_4umstep_Destripe_DONE\_01_registration"
+    r"Z:\path\to\registration_output_folder"
 )
 SOURCE_IMAGE_PATH = Path(
-    r"Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\4_template_iterations\iteration1\outputs\updated_template.nii.gz"
+    r"Z:\path\to\source_template_image.nii.gz"
 )
 SOURCE_MASK_PATH = Path(
-    r"Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\3_brain_mask\T_P56_iteration0_n5_NeuN_template0_20um_mask_oriented_mirrored.nii.gz"
+    r"Z:\path\to\source_template_mask.nii.gz"
 )
 REFERENCE_IMAGE_PATH = Path(
-    r"Z:\LSFM\2025\2025_06\2025_06_12\20250612_11_31_09_IEB_IEB0023_F_P56_Aldh1_LAS_488Bg_561NeuN_640Iba1_4x_4umstep_Destripe_DONE\ch1_iso20um.nii.gz"
+    r"Z:\path\to\reference_subject_image.nii.gz"
 )
 
 SOURCE_SPACE = SpaceDefinition(

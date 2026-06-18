@@ -15,7 +15,7 @@ from atlasspace import registration
 # Test data are intentionally kept outside the repo because the NIfTI files can
 # be large and should not be versioned with atlasspace itself.
 TEST_DATA_DIR = Path(
-    r"Z:\Labmembers\Ingvild\standard_test_data\atlasspace\registration\with_reorienting"
+    r"Z:\path\to\atlasspace_test_data\registration_example"
 )
 OUTPUT_DIR = TEST_DATA_DIR / "outputs" / "single_run_baseline"
 

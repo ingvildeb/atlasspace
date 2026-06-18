@@ -60,13 +60,17 @@ Importable package code lives under `src/atlasspace/`.
 
 ### User-facing config assets
 
-Config templates and shipped presets live under `configs/`.
+Built-in registration presets are shipped inside the package, while illustrative
+workflow config templates live under `examples/configs/`.
 
 - `src/atlasspace/presets/registration/`
   Built-in reusable registration method presets shipped with the package.
 
-- `configs/run_presets/`
-  Templates for batch and sweep runs.
+- `examples/configs/registration_batch_template.yaml`
+  Example template for batch registration runs.
+
+- `examples/configs/registration_sweep_template.yaml`
+  Example template for registration sweep runs.
 
 ### Workflow scripts
 

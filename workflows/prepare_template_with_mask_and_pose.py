@@ -21,13 +21,13 @@ from atlasspace.image.pose_standardization import (  # noqa: E402
 
 
 LANDMARK_FILE = Path(
-    r"Z:\Labmembers\Ingvild\Atlasing\LSFM_templates_working_area\orientation_testing\template_landmarks.xlsx"
+    r"Z:\path\to\template_landmarks.xlsx"
 )
 MASK_FILE = Path(
-    r"Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_updates\current_template\T_P56_iteration0_n5_NeuN_template0_20um_mask.nii.gz"
+    r"Z:\path\to\template_mask.nii.gz"
 )
 TEMPLATE_FILE = Path(
-    r"Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_variants\T_P56_iteration0_n5_NeuN_template0.nii.gz"
+    r"Z:\path\to\template_image.nii.gz"
 )
 
 TEMPLATE_NAME = "LSFM-NeuN-P56"

@@ -8,7 +8,7 @@ orientation_alignment: none
 
 shared_image:
   image_id: "ccfv3_p56_iso20um"
-  image: Z:\Labmembers\Ingvild\Atlasing\resources\ccfv3_preprocessed\2_resized\T_P56_CCFv3_iso20um_coronal_1px_resized.nii.gz
+  image: Z:\path\to\ccfv3_p56_iso20um.nii.gz
   space:
     space_name: ccfv3_p56
     orientation: lsp
@@ -20,11 +20,11 @@ registration_presets:
   - tuned_syn_cc
   - tuned_syn_cc_histmatch
 
-output_root: Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_registration_sweeps\template0_masked_pose_standardized_vs_ccfv3
+output_root: Z:\path\to\template_registration_sweeps\template_vs_ccfv3
 
 run_images:
   - image_id: "lsfm_neun_p56_template0"
-    image: Z:\Labmembers\Ingvild\RM1\atlas_templates\P56\20um\template_variants\T_P56_iteration0_n5_NeuN_template0_masked_pose_standardized.nii.gz
+    image: Z:\path\to\lsfm_neun_p56_template0_masked_pose_standardized.nii.gz
     space:
       space_name: lsfm_neun_p56_template0
       orientation: lsp
