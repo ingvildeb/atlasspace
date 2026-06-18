@@ -7,14 +7,14 @@ import nibabel as nib
 import numpy as np
 
 
-REPO_ROOT = Path(r"C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from atlasbuilder.config.config_models import ImageConfig
-from atlasbuilder.config.space_models import SpaceDefinition
-from atlasbuilder.runtime.transforms import TransformSequence
-from atlasbuilder.transforms import transform_image, transform_segmentation
-from atlasbuilder.transforms.antspy_transformation import ants, apply_transform_paths_to_image
+from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.space_models import SpaceDefinition
+from atlasspace.runtime.transforms import TransformSequence
+from atlasspace.transforms import transform_image, transform_segmentation
+from atlasspace.transforms.antspy_transformation import ants, apply_transform_paths_to_image
 
 
 # ---------------------------------------------------------------------

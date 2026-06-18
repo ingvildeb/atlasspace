@@ -7,7 +7,7 @@
 # - shared_image_role controls whether the shared image is used as the fixed
 #   image or the moving image in each registration.
 
-registration_preset: C:\Users\YourName\Documents\GitHub\atlasbuilder\configs\registration_presets\baseline_syn_kimlab.yaml
+registration_preset: C:\Users\YourName\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab.yaml
 output_subdir_name: registration_baseline_syn_kimlab
 shared_image_role: moving
 orientation_alignment: none

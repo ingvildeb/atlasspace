@@ -3,18 +3,17 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Update this path to your local atlasbuilder checkout if needed.
-REPO_ROOT = Path(r"C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
-from atlasbuilder.config.config_loading import (  # noqa: E402
+from atlasspace.config.config_loading import (  # noqa: E402
     load_registration_parameters_config,
     load_registration_sweep_config,
 )
-from atlasbuilder.registration.antspy_registration import run_antspy_registration  # noqa: E402
-from atlasbuilder.registration.job_building import build_sweep_jobs  # noqa: E402
+from atlasspace.registration.antspy_registration import run_antspy_registration  # noqa: E402
+from atlasspace.registration.job_building import build_sweep_jobs  # noqa: E402
 
 
 EXAMPLE_SWEEP_CONFIG = (

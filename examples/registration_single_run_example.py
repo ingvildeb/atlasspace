@@ -3,23 +3,22 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Update these paths to point at your local atlasbuilder checkout and test data.
-REPO_ROOT = Path(r"C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
-from atlasbuilder.config.config_loading import load_registration_parameters_config
-from atlasbuilder.config.config_models import ImageConfig
-from atlasbuilder.config.space_models import SpaceDefinition
-from atlasbuilder.registration.antspy_registration import run_antspy_registration
-from atlasbuilder.runtime.registration import RegistrationJob
+from atlasspace.config.config_loading import load_registration_parameters_config
+from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.space_models import SpaceDefinition
+from atlasspace.registration.antspy_registration import run_antspy_registration
+from atlasspace.runtime.registration import RegistrationJob
 
 
 # Test data are intentionally kept outside the repo because the NIfTI files can
-# be large and should not be versioned with atlasbuilder itself.
+# be large and should not be versioned with atlasspace itself.
 TEST_DATA_DIR = Path(
-    r"Z:\Labmembers\Ingvild\standard_test_data\atlasbuilder\registration\with_reorienting"
+    r"Z:\Labmembers\Ingvild\standard_test_data\atlasspace\registration\with_reorienting"
 )
 OUTPUT_DIR = TEST_DATA_DIR / "outputs" / "single_run_baseline"
 

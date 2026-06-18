@@ -55,12 +55,12 @@ an explicit fixed/moving role and an explicit orientation-alignment policy.
 
 The config model definitions live in:
 
-- `src/atlasbuilder/config/config_models.py`
-- `src/atlasbuilder/config/space_models.py`
+- `src/atlasspace/config/config_models.py`
+- `src/atlasspace/config/space_models.py`
 
 The runtime execution models planned for the registration module should live in:
 
-- `src/atlasbuilder/runtime/registration.py`
+- `src/atlasspace/runtime/registration.py`
 
 ### `RegistrationParametersConfig`
 
@@ -213,7 +213,7 @@ The prepared registration inputs are always saved as:
 
 ## Planned Module Structure
 
-Inside `src/atlasbuilder/registration/`, the current intended structure is:
+Inside `src/atlasspace/registration/`, the current intended structure is:
 
 - `presets.py`
   Optional helpers for named presets, if needed beyond YAML.
@@ -233,7 +233,7 @@ Inside `src/atlasbuilder/registration/`, the current intended structure is:
 
 Related runtime dataclasses live in:
 
-- `src/atlasbuilder/runtime/registration.py`
+- `src/atlasspace/runtime/registration.py`
 
 - `results.py`
   Summaries and conversion of run results into tabular form.

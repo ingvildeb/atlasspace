@@ -19,8 +19,8 @@ shared_image:
     resolution_um: [20.0, 20.0, 20.0]
 
 registration_presets:
-  - C:\Users\YourName\Documents\GitHub\atlasbuilder\configs\registration_presets\baseline_syn_kimlab.yaml
-  - C:\Users\YourName\Documents\GitHub\atlasbuilder\configs\registration_presets\tuned_syn_cc.yaml
+  - C:\Users\YourName\Documents\GitHub\atlasspace\configs\registration_presets\baseline_syn_kimlab.yaml
+  - C:\Users\YourName\Documents\GitHub\atlasspace\configs\registration_presets\tuned_syn_cc.yaml
 
 run_images:
   - image_id: "100478"

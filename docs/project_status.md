@@ -1,8 +1,8 @@
-﻿# Atlasbuilder Project Status
+﻿# atlasspace Project Status
 
 ## Current identity
 
-Atlasbuilder is now functioning as a reusable spatial-image infrastructure package rather than only a template-building repo. The package currently covers:
+atlasspace is now functioning as a reusable spatial-image infrastructure package rather than only a template-building repo. The package currently covers:
 
 - explicit spatial metadata through `ImageConfig` and `SpaceDefinition`
 - ANTsPy-based registration
@@ -13,11 +13,11 @@ Atlasbuilder is now functioning as a reusable spatial-image infrastructure packa
 
 The intended ecosystem role is:
 
-- `atlasbuilder`: registration, transforms, spatial image preparation, and template operations
+- `atlasspace`: registration, transforms, spatial image preparation, and template operations
 - `atlaslevels`: atlas label / hierarchy semantics
-- `lsfm_cell_mapping`: downstream representation and quantification that can consume atlasbuilder
+- `lsfm_cell_mapping`: downstream representation and quantification that can consume atlasspace
 
-We discussed a possible future rename to `atlasspace`, but that has been intentionally deferred.
+The package identity is now `atlasspace`, reflecting the broader scope beyond template building alone.
 
 ## Current structure
 
@@ -43,7 +43,7 @@ We generalized earlier registration-specific naming toward `ImageConfig`, with `
 - resolution
 - optional shape
 
-This was done so atlasbuilder can support not only subject-to-template registration, but also template-to-template and other spatial workflows.
+This was done so atlasspace can support not only subject-to-template registration, but also template-to-template and other spatial workflows.
 
 ### 2. Explicit metadata over implicit headers
 
@@ -69,7 +69,7 @@ This keeps presets reusable across different labs or conventions.
 
 ### 4. ANTs-native backend, generic conceptual layer
 
-Atlasbuilder is currently ANTs-native in implementation. That is an intentional and acceptable v1 choice. We did not try to make the implementation backend-agnostic prematurely.
+atlasspace is currently ANTs-native in implementation. That is an intentional and acceptable v1 choice. We did not try to make the implementation backend-agnostic prematurely.
 
 At the same time, we began sketching a more general transform layer so that public concepts can remain broader than the ANTs backend:
 
@@ -97,7 +97,7 @@ Workflow scripts are expected to compose these functions as needed.
 
 ## Registration work completed
 
-Atlasbuilder now has a working ANTsPy registration path with:
+atlasspace now has a working ANTsPy registration path with:
 
 - config loading for registration presets
 - runtime job and result dataclasses
@@ -113,7 +113,7 @@ the actual registration geometry when orientation alignment was used.
 
 ## Transform work completed
 
-Atlasbuilder now has a reusable transform layer built around `TransformSequence`.
+atlasspace now has a reusable transform layer built around `TransformSequence`.
 
 Implemented pieces include:
 
@@ -132,7 +132,7 @@ registration-faithful:
 
 - forward application reproduces `Warped`
 - inverse application reproduces `InverseWarped`
-- if registration used orientation alignment, atlasbuilder reorients inputs
+- if registration used orientation alignment, atlasspace reorients inputs
   into the effective registration spaces before applying transforms
 - outputs remain in those effective registration spaces by default rather than
   being automatically restored to the originally declared orientations
@@ -189,7 +189,7 @@ The active workflow in `lsfm_atlas_framework` was brought back closer to the ori
 
 ## Related workflow integration completed
 
-Atlasbuilder-based scripts were created in `lsfm_atlas_framework` for:
+atlasspace-based scripts were created in `lsfm_atlas_framework` for:
 
 - masking
 - mirroring masks
@@ -199,7 +199,7 @@ Atlasbuilder-based scripts were created in `lsfm_atlas_framework` for:
 - building weighted templates from confidence
 - registering subject brains to a template using tuned registration settings
 
-This means atlasbuilder is already functioning as the reusable core for the next phase of template and registration work in that repo.
+This means atlasspace is already functioning as the reusable core for the next phase of template and registration work in that repo.
 
 We also removed the older `SING_scripts/template_generation` workflow after confirming it had been effectively replaced.
 
@@ -218,10 +218,10 @@ This includes continuing to improve:
 - how much transform and template-update provenance should be promoted into
   reusable first-class records
 - how self-describing saved outputs should become over time
-We also discussed keeping atlasbuilder distinct from
+We also discussed keeping atlasspace distinct from
 `brainglobe-ccf-translator`:
 
-- atlasbuilder should own local registration-derived transform application
+- atlasspace should own local registration-derived transform application
 - `brainglobe-ccf-translator` should not be duplicated as a global atlas-space graph system
 
 ### 2. Naming / repo rename

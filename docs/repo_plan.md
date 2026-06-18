@@ -1,8 +1,8 @@
-# Atlasbuilder Repo Plan
+# atlasspace Repo Plan
 
 ## Purpose
 
-`atlasbuilder` is meant to become a reusable package for brain registration,
+`atlasspace` is meant to become a reusable package for brain registration,
 template generation, and related atlas-space workflows. The guiding goal is to
 separate reusable computational building blocks from pipeline-specific scripts,
 so the same package can support simple one-off use cases, troubleshooting, and
@@ -39,7 +39,7 @@ areas like segmentation and atlas-space analysis, but the initial focus is on:
 
 ### Library code
 
-Importable package code lives under `src/atlasbuilder/`.
+Importable package code lives under `src/atlasspace/`.
 
 - `registration/`
   Registration execution helpers, batching, parameter sweeps, transform

@@ -6,15 +6,15 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO_ROOT = Path(r"C:\Users\SmartBrain_32C_TR\Documents\GitHub\atlasbuilder")
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
-from atlasbuilder.config.config_models import ImageConfig  # noqa: E402
-from atlasbuilder.config.space_models import SpaceDefinition  # noqa: E402
-from atlasbuilder.image.masking import apply_binary_mask  # noqa: E402
-from atlasbuilder.image.pose_standardization import (  # noqa: E402
+from atlasspace.config.config_models import ImageConfig  # noqa: E402
+from atlasspace.config.space_models import SpaceDefinition  # noqa: E402
+from atlasspace.image.masking import apply_binary_mask  # noqa: E402
+from atlasspace.image.pose_standardization import (  # noqa: E402
     TemplateLandmarks,
     standardize_image_pose,
 )
