@@ -2,8 +2,6 @@
 
 `atlasspace` is a reusable Python package for spatial image preparation, registration, transform application, and template-space workflows for volumetric brain data.
 
-It is designed for cases where orientation, resolution, and space relationships need to be explicit and inspectable, rather than left implicit in scattered assumptions or file headers. The package focuses on reusable building blocks that can support both one-off analysis and larger downstream workflows.
-
 `atlasspace` currently supports:
 
 - explicit spatial metadata handling through `SpaceDefinition` and `ImageConfig`
@@ -61,9 +59,7 @@ This installs the core package, including the ANTsPy-based registration and tran
 pip install -e .
 ```
 
-This also includes NRRD support through `pynrrd`.
-
-## Quick Start
+## Example registration workflow
 
 A minimal registration workflow looks like this:
 
@@ -109,33 +105,9 @@ print(result.warped_image)
 print(result.inverse_warped_image)
 ```
 
-This example highlights the main workflow:
-
-1. load a registration preset
-2. define the fixed and moving images with explicit space metadata
-3. build a `RegistrationJob`
-4. run the registration
-5. use the resulting outputs or transform sequence downstream
-
 ## Documentation
 
-More detailed documentation can be found under `docs/`, for example:
-
-- `docs/installation.md`
-- `docs/registration.md`
-- `docs/transforms.md`
-- `docs/template_workflows.md`
-
-## Ecosystem
-
-The intended ecosystem split is:
-
-- `atlasspace`
-  spatial image preparation, registration, transforms, and template operations
-- `atlaslevels`
-  atlas label and hierarchy semantics
-- downstream workflow repositories
-  project- or lab-specific orchestration built on top of these reusable layers
+More detailed documentation is in the works and will be found under `docs/`.
 
 ## License
 
