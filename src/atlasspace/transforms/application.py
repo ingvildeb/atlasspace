@@ -84,7 +84,7 @@ def transform_segmentation(
     reference_config: ImageConfig,
     *,
     direction: TransformDirection = "forward",
-    interpolation: str = "nearestNeighbor",
+    interpolation: str = "genericLabel",
     output_path: Path | None = None,
     output_dir: Path | None = None,
     write_intermediates: bool = False,
