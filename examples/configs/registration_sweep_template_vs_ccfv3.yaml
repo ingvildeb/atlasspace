@@ -16,9 +16,7 @@ shared_image:
 
 registration_presets:
   - baseline_syn_kimlab
-  - baseline_syn_kimlab_histmatch
   - tuned_syn_cc
-  - tuned_syn_cc_histmatch
 
 output_root: Z:\path\to\template_registration_sweeps\template_vs_ccfv3
 
