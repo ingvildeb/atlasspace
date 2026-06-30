@@ -15,6 +15,7 @@ except ImportError as exc:
 from atlasspace.config.space_models import SpaceDefinition
 
 
+_UM_PER_MM = 1000.0
 _BRAINGLOBE_ORIGIN_TO_RAS = {
     "l": (0, 1.0),
     "r": (0, -1.0),
@@ -33,7 +34,8 @@ def build_nifti_affine_from_space(space: SpaceDefinition) -> np.ndarray:
         zip(space.orientation.lower(), space.resolution_um, strict=True)
     ):
         world_axis, sign = _BRAINGLOBE_ORIGIN_TO_RAS[orientation_letter]
-        affine[world_axis, axis_index] = sign * float(resolution_um)
+        resolution_mm = float(resolution_um) / _UM_PER_MM
+        affine[world_axis, axis_index] = sign * resolution_mm
 
     return affine
 
@@ -53,8 +55,10 @@ def write_nifti_from_array(
     else:
         array_to_write = array.astype(dtype, copy=False)
     image = nib.Nifti1Image(array_to_write, affine)
-    image.set_qform(affine)
-    image.set_sform(affine)
+    image.header.set_xyzt_units("mm")
+    image.header.set_zooms(tuple(float(resolution_um) / _UM_PER_MM for resolution_um in space.resolution_um))
+    image.set_qform(affine, code=2)
+    image.set_sform(affine, code=2)
     nib.save(image, str(output_path))
     return output_path
 
