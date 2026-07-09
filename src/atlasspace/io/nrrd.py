@@ -10,7 +10,7 @@ except ImportError as exc:
         "Install atlasspace with `pip install -e .` or otherwise ensure pynrrd is available."
     ) from exc
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.config.space_models import SpaceDefinition
 from atlasspace.image._image_config_utils import (
     build_output_image_config,

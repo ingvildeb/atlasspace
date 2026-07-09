@@ -20,7 +20,8 @@ areas like segmentation and atlas-space analysis, but the initial focus is on:
 
 - Keep reusable library code separate from workflow-specific scripts.
 - Prefer small, composable functions over monolithic pipeline scripts.
-- Use typed config models so lab users can run workflows through readable YAML.
+- Use typed config models so lab users can run workflows through readable TOML
+  job specs plus reusable YAML registration presets.
 - Keep the package usable both from config files and directly from Python.
 - Build module by module instead of creating large placeholder code upfront.
 
@@ -56,20 +57,24 @@ Importable package code lives under `src/atlasspace/`.
   NIfTI helpers, manifest helpers, and path-related utilities.
 
 - `config/`
-  Typed config models, space-definition models, and YAML loading helpers.
+  Typed preset models, image models, job-spec models, space-definition models,
+  and config normalization helpers.
 
 ### User-facing config assets
 
-Built-in registration presets are shipped inside the package, while illustrative
-workflow config templates live under `examples/configs/`.
+Built-in registration presets are shipped inside the package, while
+illustrative canonical TOML job-spec templates live under `examples/configs/`.
 
 - `src/atlasspace/presets/registration/`
   Built-in reusable registration method presets shipped with the package.
 
-- `examples/configs/registration_batch_template.yaml`
+- `examples/configs/registration_single_template.toml`
+  Example template for one registration run using one preset.
+
+- `examples/configs/registration_batch_template.toml`
   Example template for batch registration runs.
 
-- `examples/configs/registration_sweep_template.yaml`
+- `examples/configs/registration_sweep_template.toml`
   Example template for registration sweep runs.
 
 ### Workflow scripts
@@ -87,12 +92,13 @@ Planning notes, design decisions, and user-facing guidance live under `docs/`.
 The config system is intentionally split into separate concerns.
 
 - A registration preset defines one complete registration strategy.
-- A batch run selects one preset and applies it across many run images using
-  one shared image with an explicit fixed/moving role plus run-level
-  orientation-alignment policy.
-- A sweep run selects many presets and compares them across one or more run
-  images using one shared image with an explicit fixed/moving role plus
-  run-level orientation-alignment policy.
+- A registration job spec is written in TOML and normalizes into a
+  `RegistrationPlan`.
+- A `single` run selects one preset and one fixed/moving image pair.
+- A `batch` run selects one preset and applies it across many run-image to
+  template-image mappings.
+- A `sweep` run selects many presets and compares them across one shared image
+  plus one or more run images.
 - Image-space metadata is represented explicitly through a reusable
   `SpaceDefinition` model rather than loose resolution/orientation fields.
 
@@ -112,22 +118,6 @@ contains:
 - `preprocessing`
 - `registration`
 - `execution`
-
-### Batch run
-
-A batch run is represented by `RegistrationBatchConfig` and contains:
-
-- `shared_image_role`
-- `orientation_alignment`
-- `shared_image`
-- `registration_preset`
-- `output_subdir_name`
-- `run_images`
-
-Batch behavior:
-
-- if `output_subdir_name` is set, output goes to
-  `{run_image_parent}/{output_subdir_name}`
 
 ### Image metadata
 
@@ -154,21 +144,33 @@ Current registration assumption:
 - the runner always writes normalized registration-input NIfTIs that reflect
   the declared `SpaceDefinition` and any requested reorientation
 
-### Sweep run
+### Canonical job spec
 
-A sweep run is represented by `RegistrationSweepConfig` and contains:
+The canonical TOML document is represented by `RegistrationJobSpecConfig` and
+contains:
 
-- `shared_image_role`
+- `[run]`
+- optional `[image_defaults]`
+- optional `[moving_segmentations]`
+- `[images.<image_id>]`
+- exactly one of `[single]`, `[batch]`, or `[sweep]`
+
+This normalizes into `RegistrationPlan`, which contains:
+
+- `mode`
+- `preset_references`
 - `orientation_alignment`
-- `shared_image`
-- `registration_presets`
-- `output_root`
-- `run_images`
+- `write_input_images`
+- either `single_output_dir` or `output_root`
+- resolved `images`
+- resolved `pairs`
+- `moving_segmentations`
 
-Sweep behavior:
+Normalized output behavior:
 
-- outputs should be created under deterministic subfolders such as
-  `{output_root}/{image_id}_{preset_name}`
+- `single` uses `single_output_dir`
+- `batch` and `sweep` use
+  `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
 
 
 ## Current Registration Presets

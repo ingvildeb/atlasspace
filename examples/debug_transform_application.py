@@ -10,7 +10,7 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.config.space_models import SpaceDefinition
 from atlasspace.runtime.transforms import TransformSequence
 from atlasspace.transforms import transform_image, transform_segmentation

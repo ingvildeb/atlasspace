@@ -8,29 +8,22 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
-from atlasspace.config.config_loading import (  # noqa: E402
-    load_registration_sweep_config,
-)
-from atlasspace import registration  # noqa: E402
+from atlasspace.config.config_loading import load_registration_plan  # noqa: E402
 from atlasspace.registration.antspy_registration import run_antspy_registration  # noqa: E402
-from atlasspace.registration.job_building import build_sweep_jobs  # noqa: E402
+from atlasspace.registration.job_building import build_jobs_from_plan  # noqa: E402
 
 
 EXAMPLE_SWEEP_CONFIG = (
     REPO_ROOT
     / "examples"
     / "configs"
-    / "registration_sweep_template_vs_ccfv3.yaml"
+    / "registration_sweep_template.toml"
 )
 
 
 def main() -> None:
-    sweep_config = load_registration_sweep_config(EXAMPLE_SWEEP_CONFIG)
-    parameter_configs = [
-        registration.load_preset(preset_path)
-        for preset_path in sweep_config.registration_presets
-    ]
-    jobs = build_sweep_jobs(sweep_config, parameter_configs)
+    plan = load_registration_plan(EXAMPLE_SWEEP_CONFIG)
+    jobs = build_jobs_from_plan(plan)
 
     print(f"Prepared {len(jobs)} sweep jobs.")
     for index, job in enumerate(jobs, start=1):

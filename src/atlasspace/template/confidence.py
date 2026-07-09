@@ -7,7 +7,7 @@ import nibabel as nib
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.config.space_models import SpaceDefinition
 from atlasspace.image._image_config_utils import (
     build_output_image_config,

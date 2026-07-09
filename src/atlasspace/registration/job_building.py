@@ -2,68 +2,72 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from atlasspace.config.config_models import (
-    ImageConfig,
-    RegistrationBatchConfig,
-    RegistrationParametersConfig,
-    RegistrationSweepConfig,
-    SharedImageRole,
-)
+from atlasspace.config.job_spec_models import RegistrationPair, RegistrationPlan
+from atlasspace.config.preset_models import RegistrationParametersConfig
+from atlasspace.config.config_loading import load_preset
 from atlasspace.runtime.registration import RegistrationJob
 
 
-def derive_batch_output_dir(
-    run_image_config: ImageConfig,
-    output_subdir_name: str | None,
-) -> Path:
-    if output_subdir_name is None:
-        raise ValueError("output_subdir_name must be provided for batch job construction.")
-    return run_image_config.image.parent / output_subdir_name
+def build_jobs_from_plan(plan: RegistrationPlan) -> list[RegistrationJob]:
+    parameter_configs = [
+        _apply_run_overrides(
+            load_preset(preset_reference),
+            write_input_images=plan.write_input_images,
+        )
+        for preset_reference in plan.preset_references
+    ]
+    _validate_unique_preset_names(parameter_configs)
 
-
-def resolve_registration_pair(
-    shared_image_role: SharedImageRole,
-    shared_image_config: ImageConfig,
-    run_image_config: ImageConfig,
-) -> tuple[ImageConfig, ImageConfig]:
-    if shared_image_role == "fixed":
-        return shared_image_config, run_image_config
-    return run_image_config, shared_image_config
-
-
-def build_batch_jobs(
-    batch_config: RegistrationBatchConfig,
-    parameters_config: RegistrationParametersConfig,
-) -> list[RegistrationJob]:
     jobs: list[RegistrationJob] = []
-    for run_image_config in batch_config.run_images:
-        fixed_image_config, moving_image_config = resolve_registration_pair(
-            batch_config.shared_image_role,
-            batch_config.shared_image,
-            run_image_config,
-        )
-        jobs.append(
-            RegistrationJob(
-                fixed_image_config=fixed_image_config,
-                moving_image_config=moving_image_config,
-                output_dir=derive_batch_output_dir(
-                    run_image_config,
-                    batch_config.output_subdir_name,
-                ),
-                parameters=parameters_config,
-                orientation_alignment=batch_config.orientation_alignment,
+    for pair in plan.pairs:
+        fixed_image_config = plan.images[pair.fixed_image_id]
+        moving_image_config = plan.images[pair.moving_image_id]
+        for parameters_config in parameter_configs:
+            jobs.append(
+                RegistrationJob(
+                    fixed_image_config=fixed_image_config,
+                    moving_image_config=moving_image_config,
+                    output_dir=_derive_plan_output_dir(
+                        plan,
+                        pair=pair,
+                        parameters_config=parameters_config,
+                    ),
+                    parameters=parameters_config,
+                    orientation_alignment=plan.orientation_alignment,
+                )
             )
-        )
     return jobs
 
 
-def build_sweep_jobs(
-    sweep_config: RegistrationSweepConfig,
-    parameter_configs: list[RegistrationParametersConfig],
-) -> list[RegistrationJob]:
-    if not parameter_configs:
-        raise ValueError("parameter_configs must not be empty.")
+def _derive_plan_output_dir(
+    plan: RegistrationPlan,
+    *,
+    pair: RegistrationPair,
+    parameters_config: RegistrationParametersConfig,
+) -> Path:
+    if plan.mode == "single":
+        if plan.single_output_dir is None:
+            raise ValueError("single_output_dir must be provided for single plans.")
+        return plan.single_output_dir
 
+    if plan.output_root is None:
+        raise ValueError("output_root must be provided for batch and sweep plans.")
+    return plan.output_root / pair.pair_id / parameters_config.name
+
+
+def _apply_run_overrides(
+    parameters_config: RegistrationParametersConfig,
+    *,
+    write_input_images: bool,
+) -> RegistrationParametersConfig:
+    parameters_copy = parameters_config.model_copy(deep=True)
+    parameters_copy.execution.write_input_images = write_input_images
+    return parameters_copy
+
+
+def _validate_unique_preset_names(
+    parameter_configs: list[RegistrationParametersConfig],
+) -> None:
     preset_names = [config.name for config in parameter_configs]
     duplicate_preset_names = sorted(
         {
@@ -74,26 +78,6 @@ def build_sweep_jobs(
     )
     if duplicate_preset_names:
         raise ValueError(
-            "Preset names must be unique when building sweep jobs. "
+            "Preset names must be unique when building registration jobs. "
             f"Duplicate names found: {duplicate_preset_names}"
         )
-
-    jobs: list[RegistrationJob] = []
-    for run_image_config in sweep_config.run_images:
-        for parameters_config in parameter_configs:
-            fixed_image_config, moving_image_config = resolve_registration_pair(
-                sweep_config.shared_image_role,
-                sweep_config.shared_image,
-                run_image_config,
-            )
-            jobs.append(
-                RegistrationJob(
-                    fixed_image_config=fixed_image_config,
-                    moving_image_config=moving_image_config,
-                    output_dir=sweep_config.output_root
-                    / f"{run_image_config.image_id}_{parameters_config.name}",
-                    parameters=parameters_config,
-                    orientation_alignment=sweep_config.orientation_alignment,
-                )
-            )
-    return jobs

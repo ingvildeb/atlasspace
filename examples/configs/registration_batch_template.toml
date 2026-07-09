@@ -1,0 +1,35 @@
+[run]
+registration_presets = ["tuned_syn_cc"]
+orientation_alignment = "fixed_to_moving"
+write_input_images = false
+output_root = "outputs/subject_to_template_batch"
+
+[image_defaults]
+resolution_um = 20.0
+
+[moving_segmentations]
+enabled = true
+interpolation = "genericLabel"
+output_subdir = "moving_segmentations"
+write_intermediates = false
+
+[images.subject_a]
+image = "/path/to/subject_a/ch1_iso20um.nii.gz"
+orientation = "las"
+
+[images.subject_b]
+image = "/path/to/subject_b/ch1_iso20um.nii.gz"
+orientation = "las"
+
+[images.template_p56]
+image = "/path/to/T_P56_iteration1_n20_NeuN.nii.gz"
+space_name = "neun_p56"
+orientation = "lsp"
+
+[images.template_p56.segmentations]
+brain_mask = "/path/to/T_P56_mask.nii.gz"
+annotation = "/path/to/T_P56_annotation.nii.gz"
+
+[batch]
+template_role = "moving"
+image_to_template = { subject_a = "template_p56", subject_b = "template_p56" }

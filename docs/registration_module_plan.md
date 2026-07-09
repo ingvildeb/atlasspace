@@ -8,8 +8,9 @@ of work:
 1. run one registration method on many images
 2. run multiple registration methods on one or a few images for comparison
 
-This module is therefore designed around reusable registration presets plus
-batch and sweep workflows built on top of them.
+This module is therefore designed around reusable registration presets plus a
+canonical TOML job-spec layer that supports `single`, `batch`, and `sweep`
+workflows.
 
 
 ## Scope For V1
@@ -19,8 +20,7 @@ The initial registration module should focus on:
 - config-driven execution
 - preprocessing helpers
 - ANTsPy-based registration helpers
-- batch execution using one shared preset
-- sweep execution comparing multiple presets
+- single, batch, and sweep execution through one normalized plan layer
 - result summarization
 
 It should not yet include the more complex initialization/chained-transform
@@ -33,7 +33,7 @@ practice and would add substantial complexity.
 ### Registration preset
 
 A preset is a complete registration strategy stored as YAML and loaded through
-`RegistrationParametersConfig` from `config/config_models.py`.
+`RegistrationParametersConfig` from `config/preset_models.py`.
 
 Examples:
 
@@ -44,22 +44,25 @@ Built-in presets are now shipped inside the package under
 `src/atlasspace/presets/registration/`, while users can still point to their
 own custom preset YAML files by path.
 
-### Batch run
+### Registration job spec
 
-Run one preset across many run images using one shared image with an explicit
-fixed/moving role and an explicit orientation-alignment policy.
+Run configuration is expressed through TOML and normalized before jobs are
+built.
 
-### Sweep run
+Supported modes:
 
-Run multiple presets across one or more run images using one shared image with
-an explicit fixed/moving role and an explicit orientation-alignment policy.
+- `single`
+- `batch`
+- `sweep`
 
 
 ## Config Models
 
 The config model definitions live in:
 
-- `src/atlasspace/config/config_models.py`
+- `src/atlasspace/config/preset_models.py`
+- `src/atlasspace/config/image_models.py`
+- `src/atlasspace/config/job_spec_models.py`
 - `src/atlasspace/config/space_models.py`
 
 The runtime execution models planned for the registration module should live in:
@@ -78,13 +81,14 @@ Sections:
 
 ### `ImageConfig`
 
-Represents one image entry inside a batch or sweep config.
+Represents one resolved runtime image entry.
 
 Fields:
 
 - `image_id`
 - `image`
 - `space`
+- optional `segmentations`
 
 ### `SpaceDefinition`
 
@@ -108,35 +112,22 @@ Notes:
 - `resolution_um` is stored explicitly per axis rather than as a single scalar
   so the model can represent anisotropic images cleanly.
 
-### `RegistrationBatchConfig`
+### `RegistrationJobSpecConfig`
 
-Fields:
+Represents the user-authored TOML registration document.
 
-- `shared_image_role`
-- `orientation_alignment`
-- `shared_image`
-- `registration_preset`
-- `output_subdir_name`
-- `run_images`
+It contains:
 
-Validation rule:
+- `[run]`
+- optional `[image_defaults]`
+- optional `[moving_segmentations]`
+- `[images.<image_id>]`
+- exactly one of `[single]`, `[batch]`, or `[sweep]`
 
-- `run_images` must not be empty
+### `RegistrationPlan`
 
-### `RegistrationSweepConfig`
-
-Fields:
-
-- `shared_image_role`
-- `orientation_alignment`
-- `shared_image`
-- `registration_presets`
-- `output_root`
-- `run_images`
-
-Validation rule:
-
-- `run_images` must not be empty
+Represents the normalized execution plan after defaults, image references, and
+fixed/moving pair semantics have been resolved.
 
 
 ## Preprocessing Plan
@@ -223,7 +214,7 @@ Inside `src/atlasspace/registration/`, the current intended structure is:
   Optional helpers for named presets, if needed beyond YAML.
 
 - `job_building.py`
-  Expansion of validated batch and sweep config objects into concrete
+  Expansion of normalized `RegistrationPlan` objects into concrete
   registration jobs.
 
 - `preprocessing.py`

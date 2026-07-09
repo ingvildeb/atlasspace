@@ -11,7 +11,7 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
-from atlasspace.config.config_models import ImageConfig  # noqa: E402
+from atlasspace.config.image_models import ImageConfig  # noqa: E402
 from atlasspace.config.space_models import SpaceDefinition  # noqa: E402
 from atlasspace.image.masking import apply_binary_mask  # noqa: E402
 from atlasspace.image.pose_standardization import (  # noqa: E402

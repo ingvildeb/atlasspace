@@ -5,7 +5,7 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.config.space_models import SpaceDefinition
 from atlasspace.image.reorientation import reorient_array_to_match
 from atlasspace.io.nifti import write_nifti_from_array

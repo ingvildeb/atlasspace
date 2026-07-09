@@ -16,7 +16,7 @@ except ImportError as exc:
         "Install atlasspace with `pip install -e .` or otherwise ensure antspyx is available."
     ) from exc
 
-from atlasspace.config.config_models import RegistrationParametersConfig
+from atlasspace.config.preset_models import RegistrationParametersConfig
 from atlasspace.config.space_models import SpaceDefinition
 from atlasspace.image.reorientation import reorient_array_to_match, spaces_match_orientation
 from atlasspace.image.space_validation import validate_isotropic_space

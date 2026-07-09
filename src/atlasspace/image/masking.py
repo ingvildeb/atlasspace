@@ -5,7 +5,7 @@ from pathlib import Path
 import nibabel as nib
 import numpy as np
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.image._image_config_utils import (
     build_output_image_config,
     validate_binary_mask_array,

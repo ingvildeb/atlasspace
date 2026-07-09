@@ -1,19 +1,14 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field, model_validator
-
-from atlasspace.config.space_models import SpaceDefinition
 
 
 IntensityNormalizationMode = Literal["zscore", "robust_zscore"]
 RegistrationTransformType = Literal["Rigid", "Affine", "SyN", "SyNOnly"]
 LinearMetricType = Literal["mattes"]
 DeformableMetricType = Literal["mattes", "CC"]
-SharedImageRole = Literal["fixed", "moving"]
-OrientationAlignmentMode = Literal["none", "moving_to_fixed", "fixed_to_moving"]
 
 
 class PreprocessingConfig(BaseModel):
@@ -62,11 +57,17 @@ class RegistrationSettingsConfig(BaseModel):
         if not (0 <= self.aff_random_sampling_rate <= 1):
             raise ValueError("aff_random_sampling_rate must be between 0 and 1.")
         if not self.aff_iterations or any(value < 0 for value in self.aff_iterations):
-            raise ValueError("aff_iterations must be a non-empty sequence of nonnegative integers.")
+            raise ValueError(
+                "aff_iterations must be a non-empty sequence of nonnegative integers."
+            )
         if not self.aff_shrink_factors or any(value <= 0 for value in self.aff_shrink_factors):
-            raise ValueError("aff_shrink_factors must be a non-empty sequence of positive integers.")
+            raise ValueError(
+                "aff_shrink_factors must be a non-empty sequence of positive integers."
+            )
         if not self.aff_smoothing_sigmas or any(value < 0 for value in self.aff_smoothing_sigmas):
-            raise ValueError("aff_smoothing_sigmas must be a non-empty sequence of nonnegative numbers.")
+            raise ValueError(
+                "aff_smoothing_sigmas must be a non-empty sequence of nonnegative numbers."
+            )
         if self.syn_sampling <= 0:
             raise ValueError("syn_sampling must be positive.")
         if self.syn_gradient_step <= 0:
@@ -76,7 +77,9 @@ class RegistrationSettingsConfig(BaseModel):
         if self.syn_total_sigma < 0:
             raise ValueError("syn_total_sigma must be nonnegative.")
         if not self.syn_reg_iterations or any(value < 0 for value in self.syn_reg_iterations):
-            raise ValueError("syn_reg_iterations must be a non-empty sequence of nonnegative integers.")
+            raise ValueError(
+                "syn_reg_iterations must be a non-empty sequence of nonnegative integers."
+            )
         return self
 
 
@@ -108,50 +111,4 @@ class RegistrationParametersConfig(BaseModel):
     def validate_name(self) -> "RegistrationParametersConfig":
         if not self.name.strip():
             raise ValueError("name must not be empty.")
-        return self
-
-
-class ImageConfig(BaseModel):
-    image_id: str
-    image: Path
-    space: SpaceDefinition
-
-    @model_validator(mode="after")
-    def validate_image(self) -> "ImageConfig":
-        if not self.image_id.strip():
-            raise ValueError("image_id must not be empty.")
-        return self
-
-
-class RegistrationBatchConfig(BaseModel):
-    shared_image_role: SharedImageRole
-    shared_image: ImageConfig
-    orientation_alignment: OrientationAlignmentMode = "none"
-    registration_preset: Path
-    output_subdir_name: str | None = None
-    run_images: list[ImageConfig]
-
-    @model_validator(mode="after")
-    def validate_batch(self) -> "RegistrationBatchConfig":
-        if not self.run_images:
-            raise ValueError("run_images must not be empty.")
-        if self.output_subdir_name is not None and not self.output_subdir_name.strip():
-            raise ValueError("output_subdir_name must not be empty when provided.")
-        return self
-
-
-class RegistrationSweepConfig(BaseModel):
-    shared_image_role: SharedImageRole
-    shared_image: ImageConfig
-    orientation_alignment: OrientationAlignmentMode = "none"
-    registration_presets: list[Path]
-    output_root: Path
-    run_images: list[ImageConfig]
-
-    @model_validator(mode="after")
-    def validate_sweep(self) -> "RegistrationSweepConfig":
-        if not self.registration_presets:
-            raise ValueError("registration_presets must not be empty.")
-        if not self.run_images:
-            raise ValueError("run_images must not be empty.")
         return self

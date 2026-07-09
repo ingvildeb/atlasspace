@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 
 
 @dataclass

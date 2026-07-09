@@ -1,0 +1,32 @@
+[run]
+registration_presets = ["tuned_syn_cc"]
+orientation_alignment = "none"
+write_input_images = false
+output_dir = "outputs/p56_to_p14"
+
+[image_defaults]
+resolution_um = 20.0
+
+[moving_segmentations]
+enabled = true
+interpolation = "genericLabel"
+output_subdir = "moving_segmentations"
+write_intermediates = false
+
+[images.neun_p14]
+image = "/path/to/T_P14_iteration1_n12_NeuN.nii.gz"
+space_name = "neun_p14"
+orientation = "lsp"
+
+[images.neun_p56]
+image = "/path/to/T_P56_iteration1_n20_NeuN.nii.gz"
+space_name = "neun_p56"
+orientation = "lsp"
+
+[images.neun_p56.segmentations]
+brain_mask = "/path/to/T_P56_mask.nii.gz"
+annotation = "/path/to/T_P56_annotation.nii.gz"
+
+[single]
+fixed_image = "neun_p14"
+moving_image = "neun_p56"

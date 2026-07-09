@@ -21,6 +21,7 @@ dependencies = [
   "pynrrd",
   "PyYAML",
   "scipy",
+  "tomli>=2; python_version < '3.11'",
 ]
 
 [tool.setuptools]

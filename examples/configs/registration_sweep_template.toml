@@ -1,0 +1,29 @@
+[run]
+registration_presets = ["baseline_syn_kimlab", "tuned_syn_cc"]
+orientation_alignment = "none"
+write_input_images = false
+output_root = "outputs/template_sweep"
+
+[image_defaults]
+resolution_um = 20.0
+
+[moving_segmentations]
+enabled = false
+interpolation = "genericLabel"
+output_subdir = "moving_segmentations"
+write_intermediates = false
+
+[images.neun_p14]
+image = "/path/to/T_P14_iteration1_n12_NeuN.nii.gz"
+space_name = "neun_p14"
+orientation = "lsp"
+
+[images.neun_p56]
+image = "/path/to/T_P56_iteration1_n20_NeuN.nii.gz"
+space_name = "neun_p56"
+orientation = "lsp"
+
+[sweep]
+shared_image = "neun_p14"
+shared_image_role = "fixed"
+run_images = ["neun_p56"]

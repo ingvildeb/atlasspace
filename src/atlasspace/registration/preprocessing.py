@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from atlasspace.config.config_models import PreprocessingConfig
+from atlasspace.config.preset_models import PreprocessingConfig
 
 try:
     import ants

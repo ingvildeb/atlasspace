@@ -5,7 +5,7 @@ from typing import Literal
 
 import numpy as np
 
-from atlasspace.config.config_models import ImageConfig
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.config.space_models import SpaceDefinition
 
 

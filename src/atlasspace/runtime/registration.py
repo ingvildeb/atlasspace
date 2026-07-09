@@ -3,11 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from atlasspace.config.config_models import (
+from atlasspace.config.image_models import (
     ImageConfig,
     OrientationAlignmentMode,
-    RegistrationParametersConfig,
 )
+from atlasspace.config.preset_models import RegistrationParametersConfig
 from atlasspace.config.space_models import SpaceDefinition
 
 
