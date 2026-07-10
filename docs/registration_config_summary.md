@@ -54,11 +54,11 @@ They are represented internally by `RegistrationJobSpecConfig` in:
 
 - `src/atlasspace/config/job_spec_models.py`
 
-Example job-spec templates live in:
+Canonical job-spec templates live in the installable package:
 
-- `examples/configs/registration_single_template.toml`
-- `examples/configs/registration_batch_template.toml`
-- `examples/configs/registration_sweep_template.toml`
+- `src/atlasspace/config_templates/registration_single_template.toml`
+- `src/atlasspace/config_templates/registration_batch_template.toml`
+- `src/atlasspace/config_templates/registration_sweep_template.toml`
 
 A job spec answers:
 
@@ -117,8 +117,10 @@ Current fields:
   - boolean
 - `output_dir`
   - used by `single`
+- `output_subdir`
+  - used by `batch`
 - `output_root`
-  - used by `batch` and `sweep`
+  - used by `sweep`
 
 Notes:
 
@@ -153,14 +155,15 @@ Current fields:
     - `"genericLabel"`
     - `"nearestNeighbor"`
 - `output_subdir`
+  - optional
 - `write_intermediates`
 
 Important note:
 
-- this section is already part of the canonical config and is preserved in the
-  normalized plan
-- automatic post-registration propagation of these segmentations is not yet
-  fully wired into the default registration execution path
+- when enabled, these segmentations are now propagated automatically from the
+  moving image into the fixed-image space during the default registration run
+- if `output_subdir` is omitted, transformed segmentations are written into the
+  main registration output directory
 
 
 ### `[images.<image_id>]`
@@ -209,6 +212,7 @@ Use `single` when you want one registration with one preset.
 
 It uses:
 
+- `[run].output_subdir`
 - `template_role`
 - `image_to_template`
 
@@ -217,7 +221,10 @@ Example:
 ```toml
 [batch]
 template_role = "moving"
-image_to_template = { subject_a = "template_p56", subject_b = "template_p56" }
+
+[batch.image_to_template]
+subject_a = "template_p56"
+subject_b = "template_p56"
 ```
 
 Interpretation:
@@ -227,6 +234,7 @@ Interpretation:
 - `template_role` decides whether the template is treated as fixed or moving
 
 Use `batch` when you want one preset applied across many image-template pairs.
+Each batch output is written under the parent folder of the run image.
 
 
 ### `sweep`
@@ -325,7 +333,7 @@ It contains:
 - `preset_references`
 - `orientation_alignment`
 - `write_input_images`
-- `single_output_dir` or `output_root`
+- `single_output_dir`, `batch_output_subdir`, or `output_root`
 - resolved `images`
 - resolved `pairs`
 - `moving_segmentations`
@@ -359,13 +367,22 @@ Output layout is mode-dependent.
 
 - `[run].output_dir`
 
-### `batch` and `sweep`
+### `batch`
 
-`batch` and `sweep` write to:
+`batch` writes to:
+
+- `{run_image.parent}/{output_subdir}`
+
+If the run image is `/path/to/subject_a/ch1_iso20um.nii.gz` and
+`output_subdir = "registration"`, outputs go to:
+
+- `/path/to/subject_a/registration/`
+
+### `sweep`
+
+`sweep` writes to:
 
 - `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
-
-This keeps output naming consistent across the normalized execution path.
 
 
 ## 9. Current File Responsibilities
@@ -400,11 +417,11 @@ In other words:
 
 ## 11. Current Examples
 
-The current canonical example configs are:
+The current canonical starter configs are:
 
-- `examples/configs/registration_single_template.toml`
-- `examples/configs/registration_batch_template.toml`
-- `examples/configs/registration_sweep_template.toml`
+- `src/atlasspace/config_templates/registration_single_template.toml`
+- `src/atlasspace/config_templates/registration_batch_template.toml`
+- `src/atlasspace/config_templates/registration_sweep_template.toml`
 
 The corresponding example scripts are:
 

@@ -9,18 +9,18 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.append(str(SRC_ROOT))
 
 from atlasspace.config.config_loading import load_registration_plan  # noqa: E402
+from atlasspace.config_templates import (  # noqa: E402
+    REGISTRATION_BATCH_TEMPLATE,
+    as_template_path,
+)
 from atlasspace.registration.antspy_registration import run_antspy_registration  # noqa: E402
 from atlasspace.registration.job_building import build_jobs_from_plan  # noqa: E402
 
 
-EXAMPLE_BATCH_CONFIG = (
-    REPO_ROOT / "examples" / "configs" / "registration_batch_template.toml"
-)
-
-
 def main() -> None:
-    plan = load_registration_plan(EXAMPLE_BATCH_CONFIG)
-    jobs = build_jobs_from_plan(plan)
+    with as_template_path(REGISTRATION_BATCH_TEMPLATE) as config_path:
+        plan = load_registration_plan(config_path)
+        jobs = build_jobs_from_plan(plan)
     first_job = jobs[0]
 
     result = run_antspy_registration(first_job)

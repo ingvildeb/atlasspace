@@ -1,8 +1,12 @@
+# lsfm_template_id = registration/batch
+# lsfm_schema_version = 1
+# lsfm_template_revision = 2026-07-09
 [run]
 registration_presets = ["tuned_syn_cc"]
 orientation_alignment = "fixed_to_moving"
 write_input_images = false
-output_root = "outputs/subject_to_template_batch"
+# Written under each run image's parent folder as: image.parent / output_subdir
+output_subdir = "registration"
 
 [image_defaults]
 resolution_um = 20.0
@@ -10,7 +14,6 @@ resolution_um = 20.0
 [moving_segmentations]
 enabled = true
 interpolation = "genericLabel"
-output_subdir = "moving_segmentations"
 write_intermediates = false
 
 [images.subject_a]
@@ -32,4 +35,7 @@ annotation = "/path/to/T_P56_annotation.nii.gz"
 
 [batch]
 template_role = "moving"
-image_to_template = { subject_a = "template_p56", subject_b = "template_p56" }
+
+[batch.image_to_template]
+subject_a = "template_p56"
+subject_b = "template_p56"

@@ -16,6 +16,7 @@ except ImportError as exc:
         "Install atlasspace with `pip install -e .` or otherwise ensure antspyx is available."
     ) from exc
 
+from atlasspace.config.image_models import ImageConfig
 from atlasspace.config.preset_models import RegistrationParametersConfig
 from atlasspace.config.space_models import SpaceDefinition
 from atlasspace.image.reorientation import reorient_array_to_match, spaces_match_orientation
@@ -26,6 +27,8 @@ from atlasspace.registration.preprocessing import (
     resample_to_resolution,
 )
 from atlasspace.runtime.registration import RegistrationJob, RegistrationResult
+from atlasspace.runtime.transforms import TransformSequence
+from atlasspace.transforms.application import transform_segmentation
 
 
 def build_antspy_registration_kwargs(
@@ -288,6 +291,7 @@ def _write_run_summary(
         f"inverse_warped_image={result.inverse_warped_image}",
         f"forward_transforms={result.forward_transforms}",
         f"inverse_transforms={result.inverse_transforms}",
+        f"transformed_segmentations={result.transformed_segmentations}",
         f"error_message={result.error_message}",
     ]
     summary_path.write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
@@ -308,6 +312,48 @@ def _write_parameters_snapshot(
         encoding="utf-8",
     )
     return snapshot_path
+
+
+def _moving_segmentation_output_dir(job: RegistrationJob) -> Path:
+    output_dir = job.output_dir
+    policy = job.moving_segmentation_policy
+    if policy.output_subdir is not None:
+        output_dir = output_dir / policy.output_subdir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
+
+def _transform_moving_segmentations(
+    job: RegistrationJob,
+    result: RegistrationResult,
+) -> dict[str, Path]:
+    policy = job.moving_segmentation_policy
+    if not policy.enabled or not job.moving_image_config.segmentations:
+        return {}
+
+    output_dir = _moving_segmentation_output_dir(job)
+    transform_sequence = TransformSequence.from_registration_result(result)
+    transformed_segmentations: dict[str, Path] = {}
+
+    for segmentation_name, segmentation_path in job.moving_image_config.segmentations.items():
+        segmentation_config = ImageConfig(
+            image_id=segmentation_name,
+            image=segmentation_path,
+            space=job.moving_image_config.space,
+        )
+        output_path = output_dir / f"{segmentation_name}_WarpedSegmentation.nii.gz"
+        transformed_config = transform_segmentation(
+            segmentation_config,
+            transform_sequence,
+            job.fixed_image_config,
+            direction="forward",
+            interpolation=policy.interpolation,
+            output_path=output_path,
+            write_intermediates=policy.write_intermediates,
+        )
+        transformed_segmentations[segmentation_name] = transformed_config.image
+
+    return transformed_segmentations
 
 
 def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
@@ -394,8 +440,10 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             inverse_warped_image=inverse_warped_path,
             forward_transforms=forward_transform_paths,
             inverse_transforms=inverse_transform_paths,
+            transformed_segmentations={},
             error_message=None,
         )
+        result.transformed_segmentations = _transform_moving_segmentations(job, result)
         _write_run_summary(
             job,
             job.output_dir,
@@ -426,6 +474,7 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             inverse_warped_image=None,
             forward_transforms=[],
             inverse_transforms=[],
+            transformed_segmentations={},
             error_message=str(exc),
         )
         _write_run_summary(

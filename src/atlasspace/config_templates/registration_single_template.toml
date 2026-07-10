@@ -1,8 +1,12 @@
+# lsfm_template_id = registration/single
+# lsfm_schema_version = 1
+# lsfm_template_revision = 2026-07-09
 [run]
 registration_presets = ["tuned_syn_cc"]
 orientation_alignment = "none"
 write_input_images = false
-output_dir = "outputs/p56_to_p14"
+# Interpreted relative to this TOML file.
+output_dir = "../outputs/p56_to_p14"
 
 [image_defaults]
 resolution_um = 20.0
@@ -10,7 +14,6 @@ resolution_um = 20.0
 [moving_segmentations]
 enabled = true
 interpolation = "genericLabel"
-output_subdir = "moving_segmentations"
 write_intermediates = false
 
 [images.neun_p14]

@@ -34,8 +34,10 @@ def build_jobs_from_plan(plan: RegistrationPlan) -> list[RegistrationJob]:
                     ),
                     parameters=parameters_config,
                     orientation_alignment=plan.orientation_alignment,
+                    moving_segmentation_policy=plan.moving_segmentations,
                 )
             )
+    _validate_unique_output_dirs(jobs)
     return jobs
 
 
@@ -50,8 +52,20 @@ def _derive_plan_output_dir(
             raise ValueError("single_output_dir must be provided for single plans.")
         return plan.single_output_dir
 
+    if plan.mode == "batch":
+        if plan.batch_output_subdir is None:
+            raise ValueError("batch_output_subdir must be provided for batch plans.")
+        if pair.run_image_id is None:
+            raise ValueError("run_image_id must be provided for batch plans.")
+        run_image_config = plan.images.get(pair.run_image_id)
+        if run_image_config is None:
+            raise ValueError(
+                f"run_image_id '{pair.run_image_id}' was not found in plan images."
+            )
+        return run_image_config.image.parent / Path(plan.batch_output_subdir)
+
     if plan.output_root is None:
-        raise ValueError("output_root must be provided for batch and sweep plans.")
+        raise ValueError("output_root must be provided for sweep plans.")
     return plan.output_root / pair.pair_id / parameters_config.name
 
 
@@ -80,4 +94,21 @@ def _validate_unique_preset_names(
         raise ValueError(
             "Preset names must be unique when building registration jobs. "
             f"Duplicate names found: {duplicate_preset_names}"
+        )
+
+
+def _validate_unique_output_dirs(jobs: list[RegistrationJob]) -> None:
+    output_dirs = [job.output_dir for job in jobs]
+    duplicate_output_dirs = sorted(
+        {
+            str(output_dir)
+            for output_dir in output_dirs
+            if output_dirs.count(output_dir) > 1
+        }
+    )
+    if duplicate_output_dirs:
+        raise ValueError(
+            "Registration jobs resolved to duplicate output directories. "
+            "Each job must have a unique output path. "
+            f"Duplicate output directories: {duplicate_output_dirs}"
         )

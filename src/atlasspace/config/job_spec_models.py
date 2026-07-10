@@ -23,6 +23,7 @@ class RegistrationRunConfig(BaseModel):
     orientation_alignment: OrientationAlignmentMode = "none"
     write_input_images: bool = False
     output_dir: Path | None = None
+    output_subdir: str | None = None
     output_root: Path | None = None
 
     @model_validator(mode="after")
@@ -31,6 +32,11 @@ class RegistrationRunConfig(BaseModel):
             raise ValueError("registration_presets must not be empty.")
         if any(not preset.strip() for preset in self.registration_presets):
             raise ValueError("registration_presets entries must not be empty.")
+        if self.output_subdir is not None:
+            if not self.output_subdir.strip():
+                raise ValueError("output_subdir must not be empty when provided.")
+            if Path(self.output_subdir).is_absolute():
+                raise ValueError("output_subdir must be relative when provided.")
         return self
 
 
@@ -54,13 +60,16 @@ class MovingSegmentationPolicy(BaseModel):
 
     enabled: bool = False
     interpolation: MovingSegmentationInterpolationMode = "genericLabel"
-    output_subdir: str = "moving_segmentations"
+    output_subdir: str | None = None
     write_intermediates: bool = False
 
     @model_validator(mode="after")
     def validate_policy(self) -> "MovingSegmentationPolicy":
-        if not self.output_subdir.strip():
-            raise ValueError("output_subdir must not be empty.")
+        if self.output_subdir is not None:
+            if not self.output_subdir.strip():
+                raise ValueError("output_subdir must not be empty when provided.")
+            if Path(self.output_subdir).is_absolute():
+                raise ValueError("output_subdir must be relative when provided.")
         return self
 
 
@@ -141,6 +150,7 @@ class RegistrationPair(BaseModel):
 
     fixed_image_id: str
     moving_image_id: str
+    run_image_id: str | None = None
 
     @model_validator(mode="after")
     def validate_pair(self) -> "RegistrationPair":
@@ -150,6 +160,15 @@ class RegistrationPair(BaseModel):
             raise ValueError("moving_image_id must not be empty.")
         if self.fixed_image_id == self.moving_image_id:
             raise ValueError("fixed_image_id and moving_image_id must differ.")
+        if self.run_image_id is not None and not self.run_image_id.strip():
+            raise ValueError("run_image_id must not be empty when provided.")
+        if (
+            self.run_image_id is not None
+            and self.run_image_id not in {self.fixed_image_id, self.moving_image_id}
+        ):
+            raise ValueError(
+                "run_image_id must match either fixed_image_id or moving_image_id when provided."
+            )
         return self
 
     @property
@@ -165,6 +184,7 @@ class RegistrationPlan(BaseModel):
     orientation_alignment: OrientationAlignmentMode = "none"
     write_input_images: bool = False
     single_output_dir: Path | None = None
+    batch_output_subdir: str | None = None
     output_root: Path | None = None
     images: dict[str, ImageConfig]
     pairs: list[RegistrationPair]
@@ -183,8 +203,11 @@ class RegistrationPlan(BaseModel):
         if self.mode == "single":
             if self.single_output_dir is None:
                 raise ValueError("single_output_dir is required for single plans.")
+        elif self.mode == "batch":
+            if self.batch_output_subdir is None:
+                raise ValueError("batch_output_subdir is required for batch plans.")
         elif self.output_root is None:
-            raise ValueError("output_root is required for batch and sweep plans.")
+            raise ValueError("output_root is required for sweep plans.")
 
         missing_ids = {
             image_id
@@ -196,6 +219,16 @@ class RegistrationPlan(BaseModel):
             raise ValueError(
                 "pairs reference unknown image ids: "
                 f"{sorted(missing_ids)}"
+            )
+        missing_run_ids = {
+            pair.run_image_id
+            for pair in self.pairs
+            if pair.run_image_id is not None and pair.run_image_id not in self.images
+        }
+        if missing_run_ids:
+            raise ValueError(
+                "pairs reference unknown run image ids: "
+                f"{sorted(missing_run_ids)}"
             )
         return self
 
@@ -243,6 +276,10 @@ class RegistrationJobSpecConfig(BaseModel):
         if mode == "single":
             if self.run.output_dir is None:
                 raise ValueError("[run].output_dir is required for single configs.")
+            if self.run.output_subdir is not None:
+                raise ValueError("[run].output_subdir is not used for single configs.")
+            if self.run.output_root is not None:
+                raise ValueError("[run].output_root is not used for single configs.")
             single_config = self.single
             assert single_config is not None
             self._validate_image_reference(single_config.fixed_image, "single.fixed_image")
@@ -254,10 +291,13 @@ class RegistrationJobSpecConfig(BaseModel):
                 raise ValueError("single.fixed_image and single.moving_image must differ.")
             return self
 
-        if self.run.output_root is None:
-            raise ValueError("[run].output_root is required for batch and sweep configs.")
-
         if mode == "batch":
+            if self.run.output_subdir is None:
+                raise ValueError("[run].output_subdir is required for batch configs.")
+            if self.run.output_dir is not None:
+                raise ValueError("[run].output_dir is not used for batch configs.")
+            if self.run.output_root is not None:
+                raise ValueError("[run].output_root is not used for batch configs.")
             batch_config = self.batch
             assert batch_config is not None
             for image_id, template_id in batch_config.image_to_template.items():
@@ -274,6 +314,12 @@ class RegistrationJobSpecConfig(BaseModel):
 
         sweep_config = self.sweep
         assert sweep_config is not None
+        if self.run.output_root is None:
+            raise ValueError("[run].output_root is required for sweep configs.")
+        if self.run.output_dir is not None:
+            raise ValueError("[run].output_dir is not used for sweep configs.")
+        if self.run.output_subdir is not None:
+            raise ValueError("[run].output_subdir is not used for sweep configs.")
         self._validate_image_reference(sweep_config.shared_image, "sweep.shared_image")
         if len(set(sweep_config.run_images)) != len(sweep_config.run_images):
             raise ValueError("sweep.run_images entries must be unique.")

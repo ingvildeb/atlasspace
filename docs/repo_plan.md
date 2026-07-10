@@ -62,20 +62,20 @@ Importable package code lives under `src/atlasspace/`.
 
 ### User-facing config assets
 
-Built-in registration presets are shipped inside the package, while
-illustrative canonical TOML job-spec templates live under `examples/configs/`.
+Built-in registration presets and canonical TOML job-spec templates are both
+shipped inside the installable package.
 
 - `src/atlasspace/presets/registration/`
   Built-in reusable registration method presets shipped with the package.
 
-- `examples/configs/registration_single_template.toml`
-  Example template for one registration run using one preset.
+- `src/atlasspace/config_templates/registration_single_template.toml`
+  Canonical starter template for one registration run using one preset.
 
-- `examples/configs/registration_batch_template.toml`
-  Example template for batch registration runs.
+- `src/atlasspace/config_templates/registration_batch_template.toml`
+  Canonical starter template for batch registration runs.
 
-- `examples/configs/registration_sweep_template.toml`
-  Example template for registration sweep runs.
+- `src/atlasspace/config_templates/registration_sweep_template.toml`
+  Canonical starter template for registration sweep runs.
 
 ### Workflow scripts
 
@@ -161,7 +161,7 @@ This normalizes into `RegistrationPlan`, which contains:
 - `preset_references`
 - `orientation_alignment`
 - `write_input_images`
-- either `single_output_dir` or `output_root`
+- mode-specific output placement fields
 - resolved `images`
 - resolved `pairs`
 - `moving_segmentations`
@@ -169,8 +169,8 @@ This normalizes into `RegistrationPlan`, which contains:
 Normalized output behavior:
 
 - `single` uses `single_output_dir`
-- `batch` and `sweep` use
-  `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
+- `batch` uses `{run_image.parent}/{output_subdir}`
+- `sweep` uses `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
 
 
 ## Current Registration Presets

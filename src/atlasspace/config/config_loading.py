@@ -243,7 +243,7 @@ def normalize_registration_job_spec(
             preset_references=preset_references,
             orientation_alignment=job_spec.run.orientation_alignment,
             write_input_images=job_spec.run.write_input_images,
-            output_root=_resolve_path(job_spec.run.output_root, base_dir=base_dir),
+            batch_output_subdir=job_spec.run.output_subdir,
             images=resolved_images,
             pairs=pairs,
             moving_segmentations=job_spec.moving_segmentations,
@@ -321,11 +321,13 @@ def _resolve_batch_pair(
         return _build_registration_pair(
             fixed_image_id=run_image_id,
             moving_image_id=template_image_id,
+            run_image_id=run_image_id,
         )
     if template_role == "fixed":
         return _build_registration_pair(
             fixed_image_id=template_image_id,
             moving_image_id=run_image_id,
+            run_image_id=run_image_id,
         )
     raise ValueError(f"Unsupported template_role: {template_role}")
 
@@ -340,11 +342,13 @@ def _resolve_sweep_pair(
         return _build_registration_pair(
             fixed_image_id=shared_image_id,
             moving_image_id=run_image_id,
+            run_image_id=run_image_id,
         )
     if shared_image_role == "moving":
         return _build_registration_pair(
             fixed_image_id=run_image_id,
             moving_image_id=shared_image_id,
+            run_image_id=run_image_id,
         )
     raise ValueError(f"Unsupported shared_image_role: {shared_image_role}")
 
@@ -353,10 +357,12 @@ def _build_registration_pair(
     *,
     fixed_image_id: str,
     moving_image_id: str,
+    run_image_id: str | None = None,
 ) -> RegistrationPair:
     return RegistrationPair(
         fixed_image_id=fixed_image_id,
         moving_image_id=moving_image_id,
+        run_image_id=run_image_id,
     )
 
 

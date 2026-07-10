@@ -7,6 +7,7 @@ from atlasspace.config.image_models import (
     ImageConfig,
     OrientationAlignmentMode,
 )
+from atlasspace.config.job_spec_models import MovingSegmentationPolicy
 from atlasspace.config.preset_models import RegistrationParametersConfig
 from atlasspace.config.space_models import SpaceDefinition
 
@@ -18,6 +19,9 @@ class RegistrationJob:
     output_dir: Path
     parameters: RegistrationParametersConfig
     orientation_alignment: OrientationAlignmentMode = "none"
+    moving_segmentation_policy: MovingSegmentationPolicy = field(
+        default_factory=MovingSegmentationPolicy
+    )
 
 
 @dataclass
@@ -36,4 +40,5 @@ class RegistrationResult:
     inverse_warped_image: Path | None = None
     forward_transforms: list[Path] = field(default_factory=list)
     inverse_transforms: list[Path] = field(default_factory=list)
+    transformed_segmentations: dict[str, Path] = field(default_factory=dict)
     error_message: str | None = None
