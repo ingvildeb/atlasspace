@@ -97,6 +97,15 @@ class TransformSequence:
     ) -> "TransformSequence":
         return cls.from_registration_result(result)
 
+    @classmethod
+    def from_registration_output(
+        cls,
+        output_dir: str | Path,
+    ) -> "TransformSequence":
+        from atlasspace.registration.result_manifest import load_registration_result
+
+        return cls.from_registration_result(load_registration_result(output_dir))
+
     def inverted(self) -> "TransformSequence":
         return TransformSequence(
             source_space=self.target_space,

@@ -26,6 +26,7 @@ from atlasspace.registration.preprocessing import (
     preprocess_registration_images,
     resample_to_resolution,
 )
+from atlasspace.registration.result_manifest import write_registration_result_manifest
 from atlasspace.runtime.registration import RegistrationJob, RegistrationResult
 from atlasspace.runtime.transforms import TransformSequence
 from atlasspace.transforms.application import transform_segmentation
@@ -256,48 +257,6 @@ def _save_registration_outputs(
     )
 
 
-def _write_run_summary(
-    job: RegistrationJob,
-    output_dir: Path,
-    result: RegistrationResult,
-    fixed_space: SpaceDefinition,
-    moving_space: SpaceDefinition,
-    fixed_normalized_path: Path,
-    moving_normalized_path: Path,
-) -> Path:
-    summary_path = output_dir / "registration_summary.txt"
-    summary_lines = [
-        f"success={result.success}",
-        f"fixed_image_id={result.fixed_image_id}",
-        f"moving_image_id={result.moving_image_id}",
-        f"fixed_image={job.fixed_image_config.image}",
-        f"moving_image={job.moving_image_config.image}",
-        f"fixed_normalized_for_registration={fixed_normalized_path}",
-        f"moving_normalized_for_registration={moving_normalized_path}",
-        f"fixed_space_name={fixed_space.space_name}",
-        f"moving_space_name={moving_space.space_name}",
-        f"configured_fixed_resolution_um={job.fixed_image_config.space.resolution_um}",
-        f"configured_moving_resolution_um={job.moving_image_config.space.resolution_um}",
-        f"effective_fixed_resolution_um={fixed_space.resolution_um}",
-        f"effective_moving_resolution_um={moving_space.resolution_um}",
-        f"configured_fixed_orientation={job.fixed_image_config.space.orientation}",
-        f"configured_moving_orientation={job.moving_image_config.space.orientation}",
-        f"effective_fixed_orientation={fixed_space.orientation}",
-        f"effective_moving_orientation={moving_space.orientation}",
-        f"preset_name={result.preset_name}",
-        f"output_dir={result.output_dir}",
-        f"runtime_seconds={result.runtime_seconds}",
-        f"warped_image={result.warped_image}",
-        f"inverse_warped_image={result.inverse_warped_image}",
-        f"forward_transforms={result.forward_transforms}",
-        f"inverse_transforms={result.inverse_transforms}",
-        f"transformed_segmentations={result.transformed_segmentations}",
-        f"error_message={result.error_message}",
-    ]
-    summary_path.write_text("\n".join(summary_lines) + "\n", encoding="utf-8")
-    return summary_path
-
-
 def _write_parameters_snapshot(
     job: RegistrationJob,
     output_dir: Path,
@@ -444,16 +403,13 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             error_message=None,
         )
         result.transformed_segmentations = _transform_moving_segmentations(job, result)
-        _write_run_summary(
-            job,
-            job.output_dir,
-            result,
-            fixed_space,
-            moving_space,
-            fixed_normalized_path,
-            moving_normalized_path,
-        )
         _write_parameters_snapshot(job, job.output_dir)
+        write_registration_result_manifest(
+            job,
+            result,
+            fixed_normalized_path=fixed_normalized_path,
+            moving_normalized_path=moving_normalized_path,
+        )
         return result
     except Exception as exc:
         runtime_seconds = time.perf_counter() - start_time
@@ -477,14 +433,15 @@ def run_antspy_registration(job: RegistrationJob) -> RegistrationResult:
             transformed_segmentations={},
             error_message=str(exc),
         )
-        _write_run_summary(
-            job,
-            job.output_dir,
-            result,
-            fixed_space,
-            moving_space,
-            fixed_normalized_path,
-            moving_normalized_path,
-        )
         _write_parameters_snapshot(job, job.output_dir)
+        write_registration_result_manifest(
+            job,
+            result,
+            fixed_normalized_path=(
+                fixed_normalized_path if fixed_normalized_path.exists() else None
+            ),
+            moving_normalized_path=(
+                moving_normalized_path if moving_normalized_path.exists() else None
+            ),
+        )
         return result
