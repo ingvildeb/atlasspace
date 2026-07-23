@@ -53,6 +53,9 @@ def _derive_plan_output_dir(
         return plan.single_output_dir
 
     if plan.mode == "batch":
+        if plan.output_root is not None:
+            return plan.output_root / pair.pair_id / parameters_config.name
+
         if plan.batch_output_subdir is None:
             raise ValueError("batch_output_subdir must be provided for batch plans.")
         if pair.run_image_id is None:

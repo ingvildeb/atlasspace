@@ -150,14 +150,59 @@ class RegistrationJobSpecTomlTests(unittest.TestCase):
             )
 
             plan = load_registration_plan(config_path)
+            jobs = build_jobs_from_plan(plan)
 
             self.assertEqual(plan.mode, "batch")
             self.assertEqual(plan.output_root, tmp_path / "outputs" / "batch")
+            self.assertEqual(len(jobs), 1)
+            self.assertEqual(
+                jobs[0].output_dir,
+                tmp_path / "outputs" / "batch" / "subject_a__template_p56" / "tuned_syn_cc",
+            )
             self.assertEqual(plan.pairs[0].fixed_image_id, "subject_a")
             self.assertEqual(plan.pairs[0].moving_image_id, "template_p56")
             self.assertEqual(
                 plan.images["template_p56"].segmentations["annotation"],
                 tmp_path / "template_annotation.nii.gz",
+            )
+
+    def test_batch_jobs_keep_run_parent_output_subdir_layout(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            config_path = tmp_path / "batch.toml"
+            config_path.write_text(
+                textwrap.dedent(
+                    """
+                    [run]
+                    registration_presets = ["tuned_syn_cc"]
+                    output_subdir = "registration"
+
+                    [image_defaults]
+                    resolution_um = 20.0
+                    orientation = "lsp"
+
+                    [images.subject_a]
+                    image = "subject_a/ch1.nii.gz"
+
+                    [images.template_p56]
+                    image = "template_p56.nii.gz"
+
+                    [batch]
+                    template_role = "moving"
+                    image_to_template = { subject_a = "template_p56" }
+                    """
+                ).strip(),
+                encoding="utf-8",
+            )
+
+            plan = load_registration_plan(config_path)
+            jobs = build_jobs_from_plan(plan)
+
+            self.assertIsNone(plan.output_root)
+            self.assertEqual(plan.batch_output_subdir, "registration")
+            self.assertEqual(
+                jobs[0].output_dir,
+                tmp_path / "subject_a" / "registration",
             )
 
     def test_sweep_jobs_use_pair_and_preset_output_layout(self) -> None:

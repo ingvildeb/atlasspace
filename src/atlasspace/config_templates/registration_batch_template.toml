@@ -5,8 +5,10 @@
 registration_presets = ["tuned_syn_cc"]
 orientation_alignment = "fixed_to_moving"
 write_input_images = false
-# Written under each run image's parent folder as: image.parent / output_subdir
+# Choose exactly one output layout. output_subdir is convenient when each run
+# image has its own subject folder. output_root is useful for arbitrary pairs.
 output_subdir = "registration"
+# output_root = "/path/to/project/outputs"
 
 [image_defaults]
 resolution_um = 20.0

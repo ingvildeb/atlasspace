@@ -169,7 +169,8 @@ This normalizes into `RegistrationPlan`, which contains:
 Normalized output behavior:
 
 - `single` uses `single_output_dir`
-- `batch` uses `{run_image.parent}/{output_subdir}`
+- `batch` uses either `{run_image.parent}/{output_subdir}` or
+  `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
 - `sweep` uses `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
 
 

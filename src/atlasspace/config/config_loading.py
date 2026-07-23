@@ -244,6 +244,7 @@ def normalize_registration_job_spec(
             orientation_alignment=job_spec.run.orientation_alignment,
             write_input_images=job_spec.run.write_input_images,
             batch_output_subdir=job_spec.run.output_subdir,
+            output_root=_resolve_path(job_spec.run.output_root, base_dir=base_dir),
             images=resolved_images,
             pairs=pairs,
             moving_segmentations=job_spec.moving_segmentations,

@@ -204,8 +204,14 @@ class RegistrationPlan(BaseModel):
             if self.single_output_dir is None:
                 raise ValueError("single_output_dir is required for single plans.")
         elif self.mode == "batch":
-            if self.batch_output_subdir is None:
-                raise ValueError("batch_output_subdir is required for batch plans.")
+            output_modes = [
+                self.batch_output_subdir is not None,
+                self.output_root is not None,
+            ]
+            if sum(output_modes) != 1:
+                raise ValueError(
+                    "batch plans require exactly one of batch_output_subdir or output_root."
+                )
         elif self.output_root is None:
             raise ValueError("output_root is required for sweep plans.")
 
@@ -292,12 +298,17 @@ class RegistrationJobSpecConfig(BaseModel):
             return self
 
         if mode == "batch":
-            if self.run.output_subdir is None:
-                raise ValueError("[run].output_subdir is required for batch configs.")
+            output_modes = [
+                self.run.output_subdir is not None,
+                self.run.output_root is not None,
+            ]
+            if sum(output_modes) != 1:
+                raise ValueError(
+                    "Batch configs require exactly one of [run].output_subdir or "
+                    "[run].output_root."
+                )
             if self.run.output_dir is not None:
                 raise ValueError("[run].output_dir is not used for batch configs.")
-            if self.run.output_root is not None:
-                raise ValueError("[run].output_root is not used for batch configs.")
             batch_config = self.batch
             assert batch_config is not None
             for image_id, template_id in batch_config.image_to_template.items():

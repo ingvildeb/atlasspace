@@ -212,7 +212,7 @@ Use `single` when you want one registration with one preset.
 
 It uses:
 
-- `[run].output_subdir`
+- exactly one of `[run].output_subdir` or `[run].output_root`
 - `template_role`
 - `image_to_template`
 
@@ -234,7 +234,8 @@ Interpretation:
 - `template_role` decides whether the template is treated as fixed or moving
 
 Use `batch` when you want one preset applied across many image-template pairs.
-Each batch output is written under the parent folder of the run image.
+With `output_subdir`, each output is written under the run image's parent.
+With `output_root`, each output uses the pair-and-preset layout described below.
 
 
 ### `sweep`
@@ -369,7 +370,7 @@ Output layout is mode-dependent.
 
 ### `batch`
 
-`batch` writes to:
+With `[run].output_subdir`, `batch` writes to:
 
 - `{run_image.parent}/{output_subdir}`
 
@@ -377,6 +378,10 @@ If the run image is `/path/to/subject_a/ch1_iso20um.nii.gz` and
 `output_subdir = "registration"`, outputs go to:
 
 - `/path/to/subject_a/registration/`
+
+With `[run].output_root`, `batch` writes to:
+
+- `{output_root}/{fixed_image_id}__{moving_image_id}/{preset_name}`
 
 ### `sweep`
 
