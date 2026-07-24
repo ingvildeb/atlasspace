@@ -12,6 +12,7 @@ DeformableMetricType = Literal["mattes", "CC"]
 
 
 class PreprocessingConfig(BaseModel):
+    fixed_padding_um: float | None = None
     intensity_normalization: IntensityNormalizationMode | None = None
     minmax_clip_percentiles: tuple[float, float] | None = None
     histogram_match: bool = False
@@ -19,6 +20,8 @@ class PreprocessingConfig(BaseModel):
 
     @model_validator(mode="after")
     def validate_preprocessing(self) -> "PreprocessingConfig":
+        if self.fixed_padding_um is not None and self.fixed_padding_um <= 0:
+            raise ValueError("fixed_padding_um must be positive when provided.")
         if self.minmax_clip_percentiles is not None:
             low, high = self.minmax_clip_percentiles
             if not (0 <= low < high <= 100):

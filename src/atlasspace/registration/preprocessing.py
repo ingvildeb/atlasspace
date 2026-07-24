@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import numpy as np
 
 from atlasspace.config.preset_models import PreprocessingConfig
@@ -15,6 +17,28 @@ except ImportError as exc:
 
 def _numpy_from_ants(image: ants.ANTsImage) -> np.ndarray:
     return image.numpy().astype(np.float32, copy=False)
+
+
+def pad_fixed_image(
+    image: ants.ANTsImage,
+    padding_um: float | None,
+) -> ants.ANTsImage:
+    """Symmetrically extend the fixed-image domain without moving its voxels."""
+    if padding_um is None:
+        return image
+    if padding_um <= 0:
+        raise ValueError("padding_um must be positive when provided.")
+
+    padding_mm = float(padding_um) / 1000.0
+    padding_voxels = [
+        int(math.ceil(padding_mm / float(spacing_mm)))
+        for spacing_mm in image.spacing
+    ]
+    return ants.pad_image(
+        image,
+        pad_width=[(value, value) for value in padding_voxels],
+        value=0.0,
+    )
 
 
 def apply_intensity_normalization(
@@ -107,7 +131,10 @@ def preprocess_registration_images(
     moving_image: ants.ANTsImage,
     preprocessing_config: PreprocessingConfig,
 ) -> tuple[ants.ANTsImage, ants.ANTsImage]:
-    fixed_preprocessed = fixed_image.clone()
+    fixed_preprocessed = pad_fixed_image(
+        fixed_image.clone(),
+        preprocessing_config.fixed_padding_um,
+    )
     moving_preprocessed = moving_image.clone()
 
     fixed_preprocessed = apply_intensity_normalization(
