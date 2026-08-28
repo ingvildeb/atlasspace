@@ -1,14 +1,15 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "atlasspace"
-version = "0.1.0"
+version = "0.2.0"
 description = "Spatial image preparation, registration, transforms, and template workflows for volumetric brain data."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "Ingvild E. Bjerke" },
 ]

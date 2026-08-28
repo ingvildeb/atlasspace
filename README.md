@@ -125,23 +125,30 @@ conda create -n atlasspace python=3.11
 conda activate atlasspace
 ```
 
-For a local editable install during development or beta testing, use:
+For reproducible pipeline or HPC use, install an immutable release tag:
 
 ```bash
-pip install -e .
+python -m pip install \
+  "atlasspace @ git+https://github.com/ingvildeb/atlasspace.git@v0.2.0"
 ```
 
-The intended packaged usage pattern will be:
+Verify the installed release and registration-output contract with:
 
 ```bash
-pip install atlasspace
+python -c "from importlib.metadata import version; from atlasspace import registration; print(version('atlasspace')); print(registration.REGISTRATION_RESULT_FILENAME, registration.REGISTRATION_RESULT_SCHEMA_VERSION)"
 ```
 
-This installs the core package, including the ANTsPy-based registration and transform functionality:
+For development from a local checkout, use an editable install instead:
 
 ```bash
-pip install -e .
+git clone https://github.com/ingvildeb/atlasspace.git
+cd atlasspace
+python -m pip install -e .
 ```
+
+Do not use an editable checkout for production registration jobs unless that is
+an explicit development choice. A tagged install makes the exact registration
+and output-manifest contract reproducible across workstations and HPC users.
 
 ## Example registration workflow
 

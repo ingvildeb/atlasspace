@@ -10,6 +10,7 @@ from atlasspace.registration.job_building import build_jobs_from_plan
 from atlasspace.registration.result_manifest import (
     REGISTRATION_PARAMETERS_FILENAME,
     REGISTRATION_RESULT_FILENAME,
+    REGISTRATION_RESULT_SCHEMA_VERSION,
     RegistrationResultManifest,
     build_legacy_registration_result_manifest,
     load_registration_result,
@@ -24,6 +25,7 @@ __all__ = [
     "RegistrationResultManifest",
     "REGISTRATION_PARAMETERS_FILENAME",
     "REGISTRATION_RESULT_FILENAME",
+    "REGISTRATION_RESULT_SCHEMA_VERSION",
     "build_legacy_registration_result_manifest",
     "list_presets",
     "load_preset",
