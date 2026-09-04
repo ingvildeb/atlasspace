@@ -118,11 +118,10 @@ def _compute_residual_array(
     subject_array: np.ndarray,
     template_array: np.ndarray,
     *,
-    residual_mode: Literal["absolute", "relative"],
+    residual_mode: Literal["absolute", "relative", "subject_deficit_relative"],
     template_relative_floor: float,
 ) -> np.ndarray:
-    """ Compute residual differences between two arrays using either 
-        absolute or relative differences """
+    """Compute two-sided or subject-deficit residual differences."""
     absolute_difference = np.abs(subject_array - template_array)
 
     if residual_mode == "absolute":
@@ -130,6 +129,13 @@ def _compute_residual_array(
     if residual_mode == "relative":
         denominator = template_array + template_relative_floor
         return (absolute_difference / denominator).astype(np.float32)
+    if residual_mode == "subject_deficit_relative":
+        # Missing expected subject signal is relevant to tissue-loss detection.
+        # Subject signal above the template is treated as contrast variation,
+        # not damage, and therefore contributes zero residual.
+        subject_deficit = np.maximum(template_array - subject_array, 0.0)
+        denominator = template_array + template_relative_floor
+        return (subject_deficit / denominator).astype(np.float32)
 
     raise ValueError(f"Unsupported residual_mode: {residual_mode}")
 
@@ -143,15 +149,23 @@ def build_confidence_map(
     histogram_match: bool = True,
     smoothing_sigma_voxels: float = 1.5,
     output_smoothing_sigma_voxels: float = 0.0,
-    residual_mode: Literal["absolute", "relative"] = "relative",
+    residual_mode: Literal[
+        "absolute",
+        "relative",
+        "subject_deficit_relative",
+    ] = "relative",
     template_relative_floor: float = 0.10,
     normalization_lower_percentile: float = 1.0,
     normalization_upper_percentile: float = 99.0,
     residual_low_percentile: float = 5.0,
     residual_high_percentile: float = 99.0,
 ) -> ImageConfig:
-    """Build a voxelwise confidence map for one registered subject 
-        in template space."""
+    """Build a voxelwise confidence map for one registered subject.
+
+    ``subject_deficit_relative`` penalizes only voxels where the registered
+    subject is darker than the template. It is intended for tissue-loss
+    detection when excess subject signal should not lower confidence.
+    """
     if smoothing_sigma_voxels < 0 or output_smoothing_sigma_voxels < 0:
         raise ValueError("Smoothing sigmas must be nonnegative.")
     if template_relative_floor <= 0:

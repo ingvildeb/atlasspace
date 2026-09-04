@@ -19,6 +19,8 @@ from atlasspace.image.space_validation import (
     check_nifti_header_matches_declared_space,
 )
 from atlasspace.image.symmetry import (
+    build_hemisphere_map,
+    infer_left_right_axis,
     mirror_unilateral_mask,
     symmetrize_image_using_support,
     symmetrize_support_image,
@@ -37,6 +39,8 @@ __all__ = [
     "assert_nifti_header_matches_declared_space",
     "resample_image_to_resolution",
     "resize_image_to_shape",
+    "build_hemisphere_map",
+    "infer_left_right_axis",
     "mirror_unilateral_mask",
     "symmetrize_image_using_support",
     "symmetrize_support_image",

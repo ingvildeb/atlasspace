@@ -5,6 +5,14 @@ All notable changes to `atlasspace` will be documented in this file.
 The project follows semantic versioning. Before `1.0.0`, minor releases may
 include intentional API or data-contract changes documented here.
 
+## [Unreleased]
+
+### Added
+
+- Added the `subject_deficit_relative` confidence residual mode for tissue-loss
+  workflows that should penalize missing expected subject signal without
+  treating excess subject intensity as low confidence.
+
 ## [0.2.0] - 2026-08-28
 
 This is the first tagged `atlasspace` release. Earlier development installs
