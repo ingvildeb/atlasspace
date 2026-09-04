@@ -16,8 +16,14 @@ from atlasspace.image._image_config_utils import (
 from atlasspace.io.nifti import write_nifti_from_array
 
 
-def _infer_left_right_axis(orientation: str) -> tuple[int, bool]:
-    for axis, letter in enumerate(orientation):
+def infer_left_right_axis(orientation: str) -> tuple[int, bool]:
+    """Return the left-right axis and whether its low indices are left.
+
+    ``orientation`` follows the BrainGlobe convention and describes the
+    anatomical location of the low-index end of each array axis.
+    """
+    normalized_orientation = orientation.strip().lower()
+    for axis, letter in enumerate(normalized_orientation):
         if letter == "l":
             return axis, True
         if letter == "r":
@@ -30,8 +36,42 @@ def _default_midline_index(axis_length: int) -> int:
 
 
 def _reflect_array_lr(array: np.ndarray, orientation: str) -> np.ndarray:
-    lr_axis, _ = _infer_left_right_axis(orientation)
+    lr_axis, _ = infer_left_right_axis(orientation)
     return np.flip(array, axis=lr_axis)
+
+
+def build_hemisphere_map(space: SpaceDefinition) -> np.ndarray:
+    """Build a BrainGlobe-convention hemisphere map for an image space.
+
+    The returned ``uint8`` array uses value 1 for anatomical left and value 2
+    for anatomical right. If the left-right axis has an odd number of voxels,
+    its central plane is assigned to the left hemisphere.
+    """
+    if space.shape is None:
+        raise ValueError("space.shape is required to build a hemisphere map.")
+
+    shape = tuple(int(value) for value in space.shape)
+    lr_axis, low_indices_are_left = infer_left_right_axis(space.orientation)
+    axis_length = shape[lr_axis]
+    midpoint = axis_length // 2
+
+    left_value = np.uint8(1)
+    right_value = np.uint8(2)
+    low_value = left_value if low_indices_are_left else right_value
+    high_value = right_value if low_indices_are_left else left_value
+    hemisphere_map = np.full(shape, low_value, dtype=np.uint8)
+
+    if axis_length % 2 == 0:
+        high_side_start = midpoint
+    elif low_indices_are_left:
+        high_side_start = midpoint + 1
+    else:
+        high_side_start = midpoint
+
+    high_side = [slice(None)] * 3
+    high_side[lr_axis] = slice(high_side_start, None)
+    hemisphere_map[tuple(high_side)] = high_value
+    return hemisphere_map
 
 
 def mirror_unilateral_mask(
@@ -49,7 +89,7 @@ def mirror_unilateral_mask(
     )
     validate_binary_mask_array(mask_array)
 
-    lr_axis, low_indices_are_left = _infer_left_right_axis(mask_space.orientation)
+    lr_axis, low_indices_are_left = infer_left_right_axis(mask_space.orientation)
     axis_length = mask_array.shape[lr_axis]
     if midline_index is None:
         midline_index = _default_midline_index(axis_length)
