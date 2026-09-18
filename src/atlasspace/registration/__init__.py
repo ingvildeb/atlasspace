@@ -17,6 +17,9 @@ from atlasspace.registration.result_manifest import (
     load_registration_result_manifest,
     migrate_legacy_registration_output,
 )
+from atlasspace.registration.segmentation_transformation import (
+    transform_segmentation_from_registration,
+)
 from atlasspace.runtime.registration import RegistrationJob, RegistrationResult
 
 __all__ = [
@@ -37,4 +40,5 @@ __all__ = [
     "load_registration_result",
     "load_registration_result_manifest",
     "migrate_legacy_registration_output",
+    "transform_segmentation_from_registration",
 ]
