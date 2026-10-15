@@ -35,6 +35,13 @@ real use.
 
 Most public image, registration, transform, and template helpers operate on `ImageConfig`.
 
+For point tables already expressed as continuous voxel indices in one of a
+registration's normalized images, use
+`atlasspace.transforms.transform_points_from_registration()`. It reads the
+normalized image headers, converts indices to the LPS+ physical millimetres
+used by ANTs, applies the role-appropriate transform list, and returns
+continuous indices in the other normalized image.
+
 For example, first define the space occupied by a 20-micron subject image:
 
 ```python
@@ -129,7 +136,7 @@ For reproducible pipeline or HPC use, install an immutable release tag:
 
 ```bash
 python -m pip install \
-  "atlasspace @ git+https://github.com/ingvildeb/atlasspace.git@v0.2.0"
+  "atlasspace @ git+https://github.com/ingvildeb/atlasspace.git@v0.2.1"
 ```
 
 Verify the installed release and registration-output contract with:

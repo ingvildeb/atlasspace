@@ -10,6 +10,7 @@ from atlasspace.transforms.composition import (
     invert_transform_sequence,
 )
 from atlasspace.runtime.transforms import TransformDirection, TransformSequence
+from atlasspace.transforms.registration_points import transform_points_from_registration
 
 __all__ = [
     "TransformDirection",
@@ -18,6 +19,7 @@ __all__ = [
     "resolve_transform_output_path",
     "transform_image",
     "transform_points",
+    "transform_points_from_registration",
     "transform_segmentation",
     "concatenate_transform_sequences",
     "invert_transform_sequence",

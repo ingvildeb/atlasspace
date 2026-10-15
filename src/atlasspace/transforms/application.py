@@ -146,6 +146,13 @@ def transform_points(
     *,
     direction: TransformDirection = "forward",
 ) -> np.ndarray:
+    """Transform LPS+ physical coordinates in millimetres with an ANTs path list.
+
+    ``direction`` selects the forward or inverse paths stored on
+    ``transform_sequence``. It does not inspect image headers or convert voxel
+    indices; use ``transform_points_from_registration`` for that higher-level
+    operation.
+    """
     transform_paths = transform_sequence.paths_for_direction(direction)
     return apply_transform_paths_to_points(points_xyz, transform_paths)
 

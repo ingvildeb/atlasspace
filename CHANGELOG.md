@@ -13,6 +13,21 @@ include intentional API or data-contract changes documented here.
   workflows that should penalize missing expected subject signal without
   treating excess subject intensity as low confidence.
 
+## [0.2.1] - 2026-09-30
+
+### Added
+
+- Added `transform_points_from_registration()` for mapping zero-based
+  continuous indices between the normalized fixed and moving registration
+  images, including image-header geometry conversion, role-aware transform
+  selection, validation, and optional chunking.
+
+### Clarified
+
+- `transform_points()` consumes LPS+ physical coordinates in millimetres;
+  its `direction` argument selects a stored transform list and does not inspect
+  image headers.
+
 ## [0.2.0] - 2026-08-28
 
 This is the first tagged `atlasspace` release. Earlier development installs
